@@ -74,10 +74,8 @@ async function fetchSuggestedPrice(card: {
   const lowestPrice = Math.min(...prices);
   const highestPrice = Math.max(...prices);
 
-  // Price to list at so seller nets ~averagePrice after eBay FVF, order fee, and shipping
-  const suggestedPrice = Math.round(
-    ((averagePrice + EBAY_ORDER_FEE + SHIPPING_COST) / (1 - EBAY_FVF_RATE)) * 100,
-  ) / 100;
+  // Price at market average — fees come out of proceeds, prioritizes sales velocity
+  const suggestedPrice = Math.round(averagePrice * 100) / 100;
 
   return { suggestedPrice, averagePrice, lowestPrice, highestPrice, soldCount: prices.length };
 }
