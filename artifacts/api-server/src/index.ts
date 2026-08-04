@@ -1,11 +1,3 @@
-import { config } from "dotenv";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
-
-// Load .env from repo root for local development (no-op in production)
-const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, "../../../.env") });
-
 import app from "./app";
 import { logger } from "./lib/logger";
 
