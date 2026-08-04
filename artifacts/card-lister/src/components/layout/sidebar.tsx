@@ -15,39 +15,42 @@ export function Sidebar() {
   ];
 
   return (
-    <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-[100dvh] text-slate-300">
-      <div className="h-16 flex items-center px-6 border-b border-slate-800">
+    <div className="w-64 border-r flex flex-col h-[100dvh]" style={{background: 'hsl(240 15% 5%)', borderColor: 'hsl(255 20% 14%)', color: 'hsl(220 20% 80%)'}}>
+      <div className="h-16 flex items-center px-6 border-b" style={{borderColor: 'hsl(255 20% 14%)'}}>
         <div className="font-display font-bold text-xl text-white tracking-tight flex items-center gap-2">
-          <div className="w-6 h-6 bg-primary rounded-[2px] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-[3px] flex items-center justify-center" style={{background: 'linear-gradient(135deg, hsl(225 100% 58%), hsl(272 85% 60%))'}}>
             <Activity className="w-4 h-4 text-white" />
           </div>
-          CardLister
+          <span>
+            <span style={{color: 'hsl(225 100% 70%)'}}>Fisch</span><span style={{color: 'hsl(272 85% 72%)'}}>TCG</span>
+          </span>
         </div>
       </div>
 
       <div className="flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto">
-        <div className="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2 px-3">Menu</div>
+        <div className="text-xs font-mono uppercase tracking-wider mb-2 px-3" style={{color: 'hsl(240 10% 40%)'}}>Menu</div>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
-            <Link 
-              key={item.href} 
+            <Link
+              key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-sm transition-all cursor-pointer ${
-                isActive 
-                  ? "bg-primary text-primary-foreground font-medium shadow-sm" 
-                  : "hover:bg-slate-800 hover:text-white"
+              className={`flex items-center gap-3 px-3 py-2 rounded transition-all cursor-pointer ${
+                isActive
+                  ? "text-white font-medium"
+                  : "hover:text-white"
               }`}
+              style={isActive ? {background: 'linear-gradient(90deg, hsl(225 100% 58% / 0.25), hsl(272 85% 60% / 0.15))', borderLeft: '2px solid hsl(225 100% 62%)'} : {borderLeft: '2px solid transparent'}}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" style={isActive ? {color: 'hsl(225 100% 70%)'} : {}} />
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           );
         })}
       </div>
 
-      <div className="p-4 border-t border-slate-800 bg-slate-950">
+      <div className="p-4 border-t" style={{borderColor: 'hsl(255 20% 14%)', background: 'hsl(240 15% 4%)'}}>
         <div className="flex items-center justify-between">
           <div className="text-xs">
             <div className="font-medium text-slate-400">eBay Connection</div>
