@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CardLister API - trading card eBay listing tool
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: cards
+    description: Card management and AI analysis
+  - name: listings
+    description: eBay listing management
+  - name: ebay
+    description: eBay connection and authentication
 paths:
   /healthz:
     get:
@@ -24,6 +30,378 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /cards:
+    get:
+      operationId: listCards
+      tags: [cards]
+      summary: List all cards
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, reviewed, listed]
+        - name: holoType
+          in: query
+          schema:
+            type: string
+            enum: [standard, holo, reverse_holo]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+    post:
+      operationId: createCard
+      tags: [cards]
+      summary: Create card record manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /cards/stats:
+    get:
+      operationId: getCardStats
+      tags: [cards]
+      summary: Get collection statistics
+      responses:
+        "200":
+          description: Collection stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardStats"
+
+  /cards/analyze:
+    post:
+      operationId: analyzeCard
+      tags: [cards]
+      summary: Analyze a single card image with AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardAnalyzeInput"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardAnalysisResult"
+
+  /cards/batch-analyze:
+    post:
+      operationId: batchAnalyzeCards
+      tags: [cards]
+      summary: Batch analyze multiple card images with SSE progress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchAnalyzeInput"
+      responses:
+        "200":
+          description: Created batch job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchJob"
+
+  /cards/batch-analyze/{jobId}/progress:
+    get:
+      operationId: getBatchProgress
+      tags: [cards]
+      summary: SSE stream for batch analysis progress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /cards/{id}:
+    get:
+      operationId: getCard
+      tags: [cards]
+      summary: Get a card by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCard
+      tags: [cards]
+      summary: Update card details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+    delete:
+      operationId: deleteCard
+      tags: [cards]
+      summary: Delete a card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /cards/{id}/pricing:
+    get:
+      operationId: getCardPricing
+      tags: [cards]
+      summary: Get eBay recently sold pricing for a card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pricing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingData"
+
+  /listings:
+    get:
+      operationId: listListings
+      tags: [listings]
+      summary: List all eBay listings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, sold, ended]
+      responses:
+        "200":
+          description: List of listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Listing"
+    post:
+      operationId: createListing
+      tags: [listings]
+      summary: Create an eBay listing for a card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Listing"
+
+  /listings/bulk:
+    post:
+      operationId: bulkCreateListings
+      tags: [listings]
+      summary: Bulk create eBay listings for multiple cards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkListingInput"
+      responses:
+        "200":
+          description: Bulk job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchJob"
+
+  /listings/bulk/{jobId}/progress:
+    get:
+      operationId: getBulkListingProgress
+      tags: [listings]
+      summary: SSE stream for bulk listing progress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /listings/stats:
+    get:
+      operationId: getListingStats
+      tags: [listings]
+      summary: Get listing statistics
+      responses:
+        "200":
+          description: Listing stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingStats"
+
+  /listings/{id}:
+    get:
+      operationId: getListing
+      tags: [listings]
+      summary: Get a listing by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Listing"
+    delete:
+      operationId: deleteListing
+      tags: [listings]
+      summary: End/delete an eBay listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /ebay/status:
+    get:
+      operationId: getEbayStatus
+      tags: [ebay]
+      summary: Check eBay connection status
+      responses:
+        "200":
+          description: eBay connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EbayStatus"
+
+  /ebay/auth-url:
+    get:
+      operationId: getEbayAuthUrl
+      tags: [ebay]
+      summary: Get eBay OAuth authorization URL
+      responses:
+        "200":
+          description: Auth URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EbayAuthUrl"
+
+  /ebay/disconnect:
+    post:
+      operationId: disconnectEbay
+      tags: [ebay]
+      summary: Disconnect eBay account
+      responses:
+        "200":
+          description: Disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EbayStatus"
+
+  /ebay/callback:
+    get:
+      operationId: ebayCallback
+      tags: [ebay]
+      summary: eBay OAuth callback
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to app
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +412,317 @@ components:
       required:
         - status
 
+    Card:
+      type: object
+      required: [id, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        imageUrl:
+          type: ["string", "null"]
+        cardName:
+          type: ["string", "null"]
+        setName:
+          type: ["string", "null"]
+        cardNumber:
+          type: ["string", "null"]
+        year:
+          type: ["string", "null"]
+        quality:
+          type: ["string", "null"]
+          description: "NM, LP, MP, HP, or D"
+        holoType:
+          type: ["string", "null"]
+          enum: ["standard", "holo", "reverse_holo", null]
+        language:
+          type: ["string", "null"]
+        rarity:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, reviewed, listed]
+        suggestedPrice:
+          type: ["number", "null"]
+        ebayListingId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CardInput:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+        cardName:
+          type: string
+        setName:
+          type: string
+        cardNumber:
+          type: string
+        year:
+          type: string
+        quality:
+          type: string
+        holoType:
+          type: string
+          enum: [standard, holo, reverse_holo]
+        language:
+          type: string
+        rarity:
+          type: string
+        notes:
+          type: string
+        suggestedPrice:
+          type: number
+
+    CardUpdate:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+        cardName:
+          type: string
+        setName:
+          type: string
+        cardNumber:
+          type: string
+        year:
+          type: string
+        quality:
+          type: string
+        holoType:
+          type: string
+          enum: [standard, holo, reverse_holo]
+        language:
+          type: string
+        rarity:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [pending, reviewed, listed]
+        suggestedPrice:
+          type: number
+
+    CardAnalyzeInput:
+      type: object
+      required: [imageBase64]
+      properties:
+        imageBase64:
+          type: string
+          description: Base64-encoded image data
+
+    CardAnalysisResult:
+      type: object
+      required: [cardId]
+      properties:
+        cardId:
+          type: integer
+        cardName:
+          type: ["string", "null"]
+        setName:
+          type: ["string", "null"]
+        cardNumber:
+          type: ["string", "null"]
+        year:
+          type: ["string", "null"]
+        quality:
+          type: ["string", "null"]
+        holoType:
+          type: ["string", "null"]
+          enum: ["standard", "holo", "reverse_holo", null]
+        language:
+          type: ["string", "null"]
+        rarity:
+          type: ["string", "null"]
+        confidence:
+          type: number
+          description: Confidence score 0-1
+        imageUrl:
+          type: ["string", "null"]
+
+    BatchAnalyzeInput:
+      type: object
+      required: [images]
+      properties:
+        images:
+          type: array
+          items:
+            type: object
+            required: [imageBase64]
+            properties:
+              imageBase64:
+                type: string
+
+    BatchJob:
+      type: object
+      required: [jobId, total]
+      properties:
+        jobId:
+          type: string
+        total:
+          type: integer
+
+    CardStats:
+      type: object
+      required: [total, pending, reviewed, listed, holoBreakdown, qualityBreakdown]
+      properties:
+        total:
+          type: integer
+        pending:
+          type: integer
+        reviewed:
+          type: integer
+        listed:
+          type: integer
+        holoBreakdown:
+          type: object
+          properties:
+            standard:
+              type: integer
+            holo:
+              type: integer
+            reverse_holo:
+              type: integer
+          required: [standard, holo, reverse_holo]
+        qualityBreakdown:
+          type: array
+          items:
+            type: object
+            required: [quality, count]
+            properties:
+              quality:
+                type: string
+              count:
+                type: integer
+        recentlyAdded:
+          type: array
+          items:
+            $ref: "#/components/schemas/Card"
+
+    PricingData:
+      type: object
+      required: [cardId, soldListings]
+      properties:
+        cardId:
+          type: integer
+        averagePrice:
+          type: ["number", "null"]
+        lowestPrice:
+          type: ["number", "null"]
+        highestPrice:
+          type: ["number", "null"]
+        suggestedPrice:
+          type: ["number", "null"]
+        soldListings:
+          type: array
+          items:
+            type: object
+            required: [title, price, soldDate, url]
+            properties:
+              title:
+                type: string
+              price:
+                type: number
+              soldDate:
+                type: string
+              url:
+                type: string
+
+    Listing:
+      type: object
+      required: [id, cardId, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        cardId:
+          type: integer
+        card:
+          $ref: "#/components/schemas/Card"
+        ebayListingId:
+          type: ["string", "null"]
+        title:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        price:
+          type: ["number", "null"]
+        status:
+          type: string
+          enum: [draft, active, sold, ended]
+        ebayUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ListingInput:
+      type: object
+      required: [cardId]
+      properties:
+        cardId:
+          type: integer
+        price:
+          type: number
+        title:
+          type: string
+        description:
+          type: string
+
+    BulkListingInput:
+      type: object
+      required: [cardIds]
+      properties:
+        cardIds:
+          type: array
+          items:
+            type: integer
+
+    ListingStats:
+      type: object
+      required: [total, draft, active, sold, ended, totalRevenue]
+      properties:
+        total:
+          type: integer
+        draft:
+          type: integer
+        active:
+          type: integer
+        sold:
+          type: integer
+        ended:
+          type: integer
+        totalRevenue:
+          type: number
+        recentListings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Listing"
+
+    EbayStatus:
+      type: object
+      required: [connected]
+      properties:
+        connected:
+          type: boolean
+        username:
+          type: ["string", "null"]
+        expiresAt:
+          type: ["string", "null"]
+
+    EbayAuthUrl:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string

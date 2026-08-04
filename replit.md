@@ -1,6 +1,6 @@
-# [Project name]
+# CardLister
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A self-hosted trading card eBay listing tool — upload card photos, AI identifies each card's name/set/number/holo type/condition, pulls recently sold eBay prices, and bulk-pushes polished listings to eBay in one go.
 
 ## Run & Operate
 

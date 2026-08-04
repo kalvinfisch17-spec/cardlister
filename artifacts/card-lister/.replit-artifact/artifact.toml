@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CardLister"
+description = "A full-stack trading card eBay listing tool. Users upload photos of their cards, AI automatically identifies the card name, set, number, condition, and holo type (standard/holo/reverse holo), looks up recent eBay sold prices, and bulk-pushes polished listings to eBay — replacing expensive monthly subscription tools like CardDealer Pro."
+version = "1.0.0"
+id = "artifacts/card-lister"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24396
+
+[services.development]
+run = "pnpm --filter @workspace/card-lister run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/card-lister", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/card-lister/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24396"
+BASE_PATH = "/"

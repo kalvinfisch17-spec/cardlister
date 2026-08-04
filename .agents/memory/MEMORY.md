@@ -1,0 +1,2 @@
+- [CardLister zod.int() codegen fix](cardlister-codegen.md) — orval v8 generates zod.int() but workspace uses zod v3; must sed-replace after every codegen run.
+- [eBay routes prefix pattern](ebay-routes.md) — eBay router mounted at /ebay in index.ts; route handlers inside must NOT repeat the /ebay prefix.
