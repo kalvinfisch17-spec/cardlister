@@ -20,6 +20,68 @@ import { randomUUID } from "crypto";
 
 const router = Router();
 
+// ─── Pricing constants ────────────────────────────────────────────────────────
+const EBAY_FVF_RATE = 0.1325;   // 13.25% final value fee
+const EBAY_ORDER_FEE = 0.30;    // per-order fee
+const SHIPPING_COST = 0.78;     // seller shipping cost
+
+/**
+ * Build the eBay search query string from card fields.
+ */
+function buildPricingQuery(card: {
+  cardName?: string | null;
+  setName?: string | null;
+  cardNumber?: string | null;
+  holoType?: string | null;
+}): string {
+  const parts: string[] = [];
+  if (card.cardName) parts.push(card.cardName);
+  if (card.setName) parts.push(card.setName);
+  if (card.cardNumber) parts.push(`#${card.cardNumber}`);
+  if (card.holoType === "holo") parts.push("holo");
+  else if (card.holoType === "reverse_holo") parts.push("reverse holo");
+  parts.push("pokemon card");
+  return parts.join(" ");
+}
+
+/**
+ * Fetch sold listings, compute average, then apply eBay fees + shipping so the
+ * suggested list price nets the seller approximately the market average.
+ *
+ * Formula: listPrice = (avgSold + orderFee + shippingCost) / (1 - fvfRate)
+ */
+async function fetchSuggestedPrice(card: {
+  cardName?: string | null;
+  setName?: string | null;
+  cardNumber?: string | null;
+  holoType?: string | null;
+}): Promise<{
+  suggestedPrice: number | null;
+  averagePrice: number | null;
+  lowestPrice: number | null;
+  highestPrice: number | null;
+  soldCount: number;
+}> {
+  const query = buildPricingQuery(card);
+  const soldListings = await searchSoldListings(query);
+  const prices = soldListings.map((l) => l.price).filter((p) => p > 0);
+
+  if (prices.length === 0) {
+    return { suggestedPrice: null, averagePrice: null, lowestPrice: null, highestPrice: null, soldCount: 0 };
+  }
+
+  const averagePrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+  const lowestPrice = Math.min(...prices);
+  const highestPrice = Math.max(...prices);
+
+  // Price to list at so seller nets ~averagePrice after eBay FVF, order fee, and shipping
+  const suggestedPrice = Math.round(
+    ((averagePrice + EBAY_ORDER_FEE + SHIPPING_COST) / (1 - EBAY_FVF_RATE)) * 100,
+  ) / 100;
+
+  return { suggestedPrice, averagePrice, lowestPrice, highestPrice, soldCount: prices.length };
+}
+
 // In-memory store for batch jobs
 const batchJobs = new Map<
   string,
@@ -116,21 +178,34 @@ router.post("/cards/analyze", async (req, res) => {
       ? null // Don't store full base64 in DB — just the analysis result
       : null;
 
-    const [card] = await db
-      .insert(cardsTable)
-      .values({
-        imageUrl,
-        cardName: analysis.cardName,
-        setName: analysis.setName,
-        cardNumber: analysis.cardNumber,
-        year: analysis.year,
-        quality: analysis.quality,
-        holoType: analysis.holoType,
-        language: analysis.language,
-        rarity: analysis.rarity,
-        status: "pending",
-      })
-      .returning();
+    // Fetch pricing in parallel with DB insert
+    const [insertResult, pricing] = await Promise.all([
+      db
+        .insert(cardsTable)
+        .values({
+          imageUrl,
+          cardName: analysis.cardName,
+          setName: analysis.setName,
+          cardNumber: analysis.cardNumber,
+          year: analysis.year,
+          quality: analysis.quality,
+          holoType: analysis.holoType,
+          language: analysis.language,
+          rarity: analysis.rarity,
+          status: "pending",
+        })
+        .returning(),
+      fetchSuggestedPrice(analysis),
+    ]);
+    const card = insertResult[0];
+
+    // Save suggested price immediately if found
+    if (pricing.suggestedPrice !== null) {
+      await db
+        .update(cardsTable)
+        .set({ suggestedPrice: pricing.suggestedPrice, updatedAt: new Date() })
+        .where(eq(cardsTable.id, card.id));
+    }
 
     res.json({
       cardId: card.id,
@@ -144,6 +219,9 @@ router.post("/cards/analyze", async (req, res) => {
       rarity: analysis.rarity,
       confidence: analysis.confidence,
       imageUrl,
+      suggestedPrice: pricing.suggestedPrice,
+      averagePrice: pricing.averagePrice,
+      soldCount: pricing.soldCount,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to analyze card");
@@ -176,20 +254,30 @@ router.post("/cards/batch-analyze", async (req, res) => {
     for (const img of images) {
       try {
         const analysis = await analyzeCardImage(img.imageBase64);
-        const [card] = await db
-          .insert(cardsTable)
-          .values({
-            cardName: analysis.cardName,
-            setName: analysis.setName,
-            cardNumber: analysis.cardNumber,
-            year: analysis.year,
-            quality: analysis.quality,
-            holoType: analysis.holoType,
-            language: analysis.language,
-            rarity: analysis.rarity,
-            status: "pending",
-          })
-          .returning();
+        const [insertResult, pricing] = await Promise.all([
+          db
+            .insert(cardsTable)
+            .values({
+              cardName: analysis.cardName,
+              setName: analysis.setName,
+              cardNumber: analysis.cardNumber,
+              year: analysis.year,
+              quality: analysis.quality,
+              holoType: analysis.holoType,
+              language: analysis.language,
+              rarity: analysis.rarity,
+              status: "pending",
+            })
+            .returning(),
+          fetchSuggestedPrice(analysis),
+        ]);
+        const card = insertResult[0];
+        if (pricing.suggestedPrice !== null) {
+          await db
+            .update(cardsTable)
+            .set({ suggestedPrice: pricing.suggestedPrice, updatedAt: new Date() })
+            .where(eq(cardsTable.id, card.id));
+        }
         job.results.push(card.id);
       } catch {
         // Skip failed images
@@ -379,41 +467,25 @@ router.get("/cards/:id/pricing", async (req, res) => {
       return;
     }
 
-    const queryParts: string[] = [];
-    if (card.cardName) queryParts.push(card.cardName);
-    if (card.setName) queryParts.push(card.setName);
-    if (card.cardNumber) queryParts.push(`#${card.cardNumber}`);
-    if (card.holoType === "holo") queryParts.push("holo");
-    else if (card.holoType === "reverse_holo") queryParts.push("reverse holo");
-    queryParts.push("pokemon card");
+    const pricing = await fetchSuggestedPrice(card);
 
-    const soldListings = await searchSoldListings(queryParts.join(" "));
-
-    const prices = soldListings.map((l) => l.price).filter((p) => p > 0);
-    const averagePrice =
-      prices.length > 0
-        ? prices.reduce((a, b) => a + b, 0) / prices.length
-        : null;
-    const lowestPrice = prices.length > 0 ? Math.min(...prices) : null;
-    const highestPrice = prices.length > 0 ? Math.max(...prices) : null;
-    // Suggested price: 90th percentile or average
-    const suggestedPrice = averagePrice ? Math.round(averagePrice * 0.95 * 100) / 100 : null;
-
-    // Update suggested price on card
-    if (suggestedPrice) {
+    // Persist updated price
+    if (pricing.suggestedPrice !== null) {
       await db
         .update(cardsTable)
-        .set({ suggestedPrice, updatedAt: new Date() })
+        .set({ suggestedPrice: pricing.suggestedPrice, updatedAt: new Date() })
         .where(eq(cardsTable.id, parsed.data.id));
     }
 
     res.json({
       cardId: parsed.data.id,
-      averagePrice,
-      lowestPrice,
-      highestPrice,
-      suggestedPrice,
-      soldListings,
+      averagePrice: pricing.averagePrice,
+      lowestPrice: pricing.lowestPrice,
+      highestPrice: pricing.highestPrice,
+      suggestedPrice: pricing.suggestedPrice,
+      soldCount: pricing.soldCount,
+      ebayFvfRate: EBAY_FVF_RATE,
+      shippingCost: SHIPPING_COST,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get pricing");

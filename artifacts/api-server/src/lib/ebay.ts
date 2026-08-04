@@ -141,7 +141,7 @@ export async function searchSoldListings(
       q: query,
       filter: "buyingOptions:{FIXED_PRICE},soldItemsOnly:{true}",
       sort: "newlyListed",
-      limit: "20",
+      limit: "50",
     });
     const res = await fetch(
       `${EBAY_API_BASE}/buy/browse/v1/item_summary/search?${params.toString()}`,
