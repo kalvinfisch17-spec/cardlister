@@ -74,8 +74,12 @@ async function fetchSuggestedPrice(card: {
   const lowestPrice = Math.min(...prices);
   const highestPrice = Math.max(...prices);
 
-  // Price at market average — fees come out of proceeds, prioritizes sales velocity
-  const suggestedPrice = Math.round(averagePrice * 100) / 100;
+  // Minimum price to list at so the seller never loses money:
+  // breakEven = (orderFee + shippingCost) / (1 - fvfRate)
+  const breakEven = Math.ceil(((EBAY_ORDER_FEE + SHIPPING_COST) / (1 - EBAY_FVF_RATE)) * 100) / 100;
+
+  // Price at market average, but never below break-even
+  const suggestedPrice = Math.max(Math.round(averagePrice * 100) / 100, breakEven);
 
   return { suggestedPrice, averagePrice, lowestPrice, highestPrice, soldCount: prices.length };
 }
