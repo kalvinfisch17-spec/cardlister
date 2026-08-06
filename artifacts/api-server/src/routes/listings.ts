@@ -483,43 +483,47 @@ router.get("/listings/:id", async (req, res) => {
 
 // POST /listings/import/ebay-csv
 router.post("/listings/import/ebay-csv", async (req, res) => {
+  // Declare outside try so the background IIFE can close over them
+  let validRows: Record<string, string>[] = [];
+  let jobId = "";
+
   try {
-  const { csvContent } = req.body ?? {};
-  if (!csvContent || typeof csvContent !== "string") {
-    res.status(400).json({ error: "csvContent is required" });
-    return;
-  }
+    const { csvContent } = req.body ?? {};
+    if (!csvContent || typeof csvContent !== "string") {
+      res.status(400).json({ error: "csvContent is required" });
+      return;
+    }
 
-  const { rows, detectedHeaders } = parseCsv(csvContent);
-  const validRows = rows.filter((row) => {
-    const itemId = getField(row, "item number", "item id", "itemid", "item no", "listing id");
-    const title = getField(row, "title", "listing title", "item title");
-    return itemId && title;
-  });
-
-  if (validRows.length === 0) {
-    const headerSample = detectedHeaders.slice(0, 10).join(", ") || "(none detected)";
-    res.status(400).json({
-      error: `No valid rows found. Detected headers: [${headerSample}]`,
+    const { rows, detectedHeaders } = parseCsv(csvContent);
+    validRows = rows.filter((row) => {
+      const itemId = getField(row, "item number", "item id", "itemid", "item no", "listing id");
+      const title = getField(row, "title", "listing title", "item title");
+      return itemId && title;
     });
-    return;
-  }
 
-  const jobId = randomUUID();
+    if (validRows.length === 0) {
+      const headerSample = detectedHeaders.slice(0, 10).join(", ") || "(none detected)";
+      res.status(400).json({
+        error: `No valid rows found. Detected headers: [${headerSample}]`,
+      });
+      return;
+    }
 
-  // Persist job to DB so progress survives server restarts
-  await db.insert(importJobsTable).values({
-    id: jobId,
-    total: validRows.length,
-    processed: 0,
-    done: false,
-    imported: 0,
-    priced: 0,
-    errors: 0,
-    notPriced: 0,
-  });
+    jobId = randomUUID();
 
-  res.json({ jobId, total: validRows.length });
+    // Persist job to DB so progress survives server restarts
+    await db.insert(importJobsTable).values({
+      id: jobId,
+      total: validRows.length,
+      processed: 0,
+      done: false,
+      imported: 0,
+      priced: 0,
+      errors: 0,
+      notPriced: 0,
+    });
+
+    res.json({ jobId, total: validRows.length });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     res.status(500).json({ error: `Server error: ${msg}` });
