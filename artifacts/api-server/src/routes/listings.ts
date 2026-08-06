@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
-import { cardsTable, listingsTable, importJobsTable } from "@workspace/db";
+import { db, pool } from "@workspace/db";
+import { cardsTable, listingsTable } from "@workspace/db";
 import { eq, desc, and, sum, count } from "drizzle-orm";
 import {
   CreateListingBody,
@@ -511,17 +511,12 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
 
     jobId = randomUUID();
 
-    // Persist job to DB so progress survives server restarts
-    await db.insert(importJobsTable).values({
-      id: jobId,
-      total: validRows.length,
-      processed: 0,
-      done: false,
-      imported: 0,
-      priced: 0,
-      errors: 0,
-      notPriced: 0,
-    });
+    // Use raw SQL to avoid Drizzle version compatibility issues
+    await pool.query(
+      `INSERT INTO import_jobs (id, total, processed, done, imported, priced, errors, not_priced)
+       VALUES ($1, $2, 0, false, 0, 0, 0, 0)`,
+      [jobId, validRows.length],
+    );
 
     res.json({ jobId, total: validRows.length });
   } catch (err: unknown) {
@@ -540,10 +535,10 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
     let notPriced = 0;
 
     const flushProgress = async (done = false) => {
-      await db
-        .update(importJobsTable)
-        .set({ processed, imported, priced, errors, notPriced, done, updatedAt: new Date() })
-        .where(eq(importJobsTable.id, jobId));
+      await pool.query(
+        `UPDATE import_jobs SET processed=$1, imported=$2, priced=$3, errors=$4, not_priced=$5, done=$6, updated_at=NOW() WHERE id=$7`,
+        [processed, imported, priced, errors, notPriced, done, jobId],
+      );
     };
 
     const CONCURRENCY = 5;
@@ -644,11 +639,11 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
 router.get("/listings/import/:jobId/progress", async (req, res) => {
   const { jobId } = req.params;
   try {
-    const [job] = await db
-      .select()
-      .from(importJobsTable)
-      .where(eq(importJobsTable.id, jobId))
-      .limit(1);
+    const result = await pool.query(
+      `SELECT id, total, processed, done, imported, priced, errors, not_priced FROM import_jobs WHERE id=$1 LIMIT 1`,
+      [jobId],
+    );
+    const job = result.rows[0];
 
     if (!job) {
       res.status(404).json({ error: "Job not found. The server may have restarted — please start a new import." });
@@ -662,7 +657,7 @@ router.get("/listings/import/:jobId/progress", async (req, res) => {
       imported: job.imported,
       priced: job.priced,
       errors: job.errors,
-      notPriced: job.notPriced,
+      notPriced: job.not_priced,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get import job progress");
