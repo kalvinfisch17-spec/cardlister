@@ -9,6 +9,7 @@ import UploadPage from "./pages/upload";
 import CardsPage from "./pages/cards/index";
 import CardDetailPage from "./pages/cards/detail";
 import ListingsPage from "./pages/listings";
+import ImportPage from "./pages/import";
 import SettingsPage from "./pages/settings";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/cards" component={CardsPage} />
       <Route path="/cards/:id" component={CardDetailPage} />
       <Route path="/listings" component={ListingsPage} />
+      <Route path="/import" component={ImportPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>

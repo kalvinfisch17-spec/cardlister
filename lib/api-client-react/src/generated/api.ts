@@ -32,7 +32,9 @@ import type {
   EbayAuthUrl,
   EbayCallbackParams,
   EbayStatus,
+  GetImportProgress200,
   HealthStatus,
+  ImportEbayCsvBody,
   ListCardsParams,
   ListListingsParams,
   Listing,
@@ -882,6 +884,154 @@ export function useGetCardPricing<TData = Awaited<ReturnType<typeof getCardPrici
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCardPricingQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getImportEbayCsvUrl = () => {
+
+
+
+
+  return `/api/listings/import/ebay-csv`
+}
+
+/**
+ * @summary Import existing eBay listings from a Seller Hub CSV export
+ */
+export const importEbayCsv = async (importEbayCsvBody: ImportEbayCsvBody, options?: Parameters<typeof customFetch>[1]): Promise<BatchJob> => {
+
+  return customFetch<BatchJob>(getImportEbayCsvUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(importEbayCsvBody)
+  }
+);}
+
+
+
+
+
+export const getImportEbayCsvMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importEbayCsv>>, TError,{data: BodyType<ImportEbayCsvBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importEbayCsv>>, TError,{data: BodyType<ImportEbayCsvBody>}, TContext> => {
+
+const mutationKey = ['importEbayCsv'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importEbayCsv>>, {data: BodyType<ImportEbayCsvBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  importEbayCsv(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportEbayCsvMutationResult = NonNullable<Awaited<ReturnType<typeof importEbayCsv>>>
+    export type ImportEbayCsvMutationBody = BodyType<ImportEbayCsvBody>
+    export type ImportEbayCsvMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Import existing eBay listings from a Seller Hub CSV export
+ */
+export const useImportEbayCsv = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importEbayCsv>>, TError,{data: BodyType<ImportEbayCsvBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importEbayCsv>>,
+        TError,
+        {data: BodyType<ImportEbayCsvBody>},
+        TContext
+      > => {
+      return useMutation(getImportEbayCsvMutationOptions(options));
+    }
+
+export const getGetImportProgressUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/listings/import/${jobId}/progress`
+}
+
+/**
+ * @summary Poll import job progress
+ */
+export const getImportProgress = async (jobId: string, options?: Parameters<typeof customFetch>[1]): Promise<GetImportProgress200> => {
+
+  return customFetch<GetImportProgress200>(getGetImportProgressUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImportProgressQueryKey = (jobId: string,) => {
+    return [
+    `/api/listings/import/${jobId}/progress`
+    ] as const;
+    }
+
+
+export const getGetImportProgressQueryOptions = <TData = Awaited<ReturnType<typeof getImportProgress>>, TError = ErrorType<unknown>>(jobId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImportProgressQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImportProgress>>> = ({ signal }) => getImportProgress(jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImportProgress>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImportProgressQueryResult = NonNullable<Awaited<ReturnType<typeof getImportProgress>>>
+export type GetImportProgressQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Poll import job progress
+ */
+
+export function useGetImportProgress<TData = Awaited<ReturnType<typeof getImportProgress>>, TError = ErrorType<unknown>>(
+ jobId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImportProgressQueryOptions(jobId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

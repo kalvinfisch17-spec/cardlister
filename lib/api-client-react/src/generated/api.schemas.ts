@@ -306,6 +306,19 @@ export const ListCardsHoloType = {
   reverse_holo: 'reverse_holo',
 } as const;
 
+export type ImportEbayCsvBody = {
+  csvContent: string;
+};
+
+export type GetImportProgress200 = {
+  processed: number;
+  total: number;
+  done: boolean;
+  imported: number;
+  priced: number;
+  errors: number;
+};
+
 export type ListListingsParams = {
 status?: ListListingsStatus;
 };

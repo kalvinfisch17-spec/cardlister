@@ -224,6 +224,62 @@ paths:
               schema:
                 $ref: "#/components/schemas/PricingData"
 
+  /listings/import/ebay-csv:
+    post:
+      operationId: importEbayCsv
+      tags: [listings]
+      summary: Import existing eBay listings from a Seller Hub CSV export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [csvContent]
+              properties:
+                csvContent:
+                  type: string
+      responses:
+        "200":
+          description: Import job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchJob"
+
+  /listings/import/{jobId}/progress:
+    get:
+      operationId: getImportProgress
+      tags: [listings]
+      summary: Poll import job progress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Import progress
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [processed, total, done, imported, priced, errors]
+                properties:
+                  processed:
+                    type: integer
+                  total:
+                    type: integer
+                  done:
+                    type: boolean
+                  imported:
+                    type: integer
+                  priced:
+                    type: integer
+                  errors:
+                    type: integer
+
   /listings:
     get:
       operationId: listListings

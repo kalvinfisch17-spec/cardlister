@@ -273,6 +273,36 @@ export const GetCardPricingResponse = zod.object({
 
 
 /**
+ * @summary Import existing eBay listings from a Seller Hub CSV export
+ */
+export const ImportEbayCsvBody = zod.object({
+  "csvContent": zod.string()
+})
+
+export const ImportEbayCsvResponse = zod.object({
+  "jobId": zod.string(),
+  "total": zod.number().int()
+})
+
+
+/**
+ * @summary Poll import job progress
+ */
+export const GetImportProgressParams = zod.object({
+  "jobId": zod.coerce.string()
+})
+
+export const GetImportProgressResponse = zod.object({
+  "processed": zod.number().int(),
+  "total": zod.number().int(),
+  "done": zod.boolean(),
+  "imported": zod.number().int(),
+  "priced": zod.number().int(),
+  "errors": zod.number().int()
+})
+
+
+/**
  * @summary List all eBay listings
  */
 export const ListListingsQueryParams = zod.object({

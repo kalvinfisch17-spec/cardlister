@@ -16,6 +16,7 @@ import {
   generateTitle,
   generateDescription,
 } from "../lib/ebay";
+import { fetchSuggestedPrice } from "../lib/pricing";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -30,6 +31,129 @@ const bulkJobs = new Map<
     listingIds: number[];
   }
 >();
+
+// In-memory store for import jobs
+const importJobs = new Map<
+  string,
+  {
+    total: number;
+    processed: number;
+    done: boolean;
+    imported: number;
+    priced: number;
+    errors: number;
+  }
+>();
+
+// ─── CSV / Title parsing helpers ─────────────────────────────────────────────
+
+function parseCsv(content: string): Record<string, string>[] {
+  // Handle both comma and tab delimited
+  const lines = content.split(/\r?\n/).filter((l) => l.trim());
+  if (lines.length < 2) return [];
+
+  const isTab = (lines[0].match(/\t/g) ?? []).length > (lines[0].match(/,/g) ?? []).length;
+  const delim = isTab ? "\t" : ",";
+
+  const parseRow = (line: string): string[] => {
+    const fields: string[] = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === delim && !inQuotes) {
+        fields.push(cur); cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    fields.push(cur);
+    return fields;
+  };
+
+  const headers = parseRow(lines[0]).map((h) =>
+    h.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").trim(),
+  );
+
+  return lines
+    .slice(1)
+    .filter((l) => l.trim())
+    .map((line) => {
+      const values = parseRow(line);
+      return Object.fromEntries(headers.map((h, i) => [h, (values[i] ?? "").trim()]));
+    });
+}
+
+function getField(row: Record<string, string>, ...keys: string[]): string | null {
+  for (const key of keys) {
+    const val = row[key.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim()];
+    if (val && val.trim()) return val.trim();
+  }
+  return null;
+}
+
+function parsePokemonTitle(title: string): {
+  cardName: string | null;
+  setName: string | null;
+  cardNumber: string | null;
+  year: string | null;
+  quality: string | null;
+  holoType: "standard" | "holo" | "reverse_holo";
+} {
+  let rem = title;
+
+  // Year
+  const yearMatch = rem.match(/\b(199\d|20[0-3]\d)\b/);
+  const year = yearMatch?.[1] ?? null;
+  if (year) rem = rem.replace(year, " ");
+
+  // Strip "Pokemon Card(s)" / TCG
+  rem = rem.replace(/\bpok[eé]mon\s+cards?\b/gi, " ");
+  rem = rem.replace(/\bTCG\b/gi, " ");
+
+  // Quality — longest match first
+  const QUALITY: [RegExp, string][] = [
+    [/\bnear[\s-]?mint\b/gi, "NM"],
+    [/\blightly[\s-]?played\b/gi, "LP"],
+    [/\bmoderately[\s-]?played\b/gi, "MP"],
+    [/\bheavily[\s-]?played\b/gi, "HP"],
+    [/\bnm[\s-]?mt\b/gi, "NM"],
+    [/\bdamaged\b/gi, "D"],
+    [/\bvery[\s-]?good\b/gi, "LP"],
+    [/\bexcellent\b/gi, "LP"],
+    [/\bgood\b/gi, "MP"],
+    [/\bmint\b/gi, "NM"],
+    [/(?<![a-z])nm(?![a-z])/gi, "NM"],
+    [/(?<![a-z])lp(?![a-z])/gi, "LP"],
+    [/(?<![a-z])mp(?![a-z])/gi, "MP"],
+  ];
+  let quality: string | null = null;
+  for (const [re, code] of QUALITY) {
+    if (re.test(rem)) { quality = code; rem = rem.replace(re, " "); break; }
+  }
+
+  // Holo type — reverse holo first
+  let holoType: "standard" | "holo" | "reverse_holo" = "standard";
+  if (/\breverse[\s-]?holo\b/i.test(rem)) {
+    holoType = "reverse_holo";
+    rem = rem.replace(/\breverse[\s-]?holo\b/gi, " ");
+  } else if (/\bholo(?:graphic|foil)?\b/i.test(rem) && !/\bnon[\s-]?holo\b/i.test(rem)) {
+    holoType = "holo";
+    rem = rem.replace(/\bholo(?:graphic|foil)?\b/gi, " ");
+  }
+
+  // Card number
+  const numMatch = rem.match(/#(\d+(?:\/\d+)?)/);
+  const cardNumber = numMatch?.[1] ?? null;
+  if (numMatch) rem = rem.replace(numMatch[0], " ");
+
+  rem = rem.replace(/[#|•·]+/g, " ").replace(/\s+/g, " ").trim();
+
+  return { cardName: rem || null, setName: null, cardNumber, year, quality, holoType };
+}
 
 // GET /listings/stats
 router.get("/listings/stats", async (req, res) => {
@@ -341,6 +465,131 @@ router.get("/listings/:id", async (req, res) => {
     req.log.error({ err }, "Failed to get listing");
     res.status(500).json({ error: "Failed to get listing" });
   }
+});
+
+// POST /listings/import/ebay-csv
+router.post("/listings/import/ebay-csv", async (req, res) => {
+  const { csvContent } = req.body ?? {};
+  if (!csvContent || typeof csvContent !== "string") {
+    res.status(400).json({ error: "csvContent is required" });
+    return;
+  }
+
+  const rows = parseCsv(csvContent);
+  const validRows = rows.filter((row) => {
+    const itemId = getField(row, "item number", "item id", "itemid", "item");
+    const title = getField(row, "title", "listing title", "item title");
+    return itemId && title;
+  });
+
+  if (validRows.length === 0) {
+    res.status(400).json({
+      error: "No valid rows found. Make sure the CSV has 'Item number' and 'Title' columns.",
+    });
+    return;
+  }
+
+  const jobId = randomUUID();
+  importJobs.set(jobId, { total: validRows.length, processed: 0, done: false, imported: 0, priced: 0, errors: 0 });
+  res.json({ jobId, total: validRows.length });
+
+  // Process in background with concurrency of 5
+  (async () => {
+    const job = importJobs.get(jobId)!;
+    const CONCURRENCY = 5;
+
+    for (let i = 0; i < validRows.length; i += CONCURRENCY) {
+      const batch = validRows.slice(i, i + CONCURRENCY);
+      await Promise.all(
+        batch.map(async (row) => {
+          try {
+            const itemId = getField(row, "item number", "item id", "itemid", "item")!;
+            const title = getField(row, "title", "listing title", "item title")!;
+            const currentPrice =
+              parseFloat(
+                getField(row, "current price", "price", "start price", "buy it now price") ?? "0",
+              ) || null;
+
+            const parsed = parsePokemonTitle(title);
+
+            // Insert card
+            const [card] = await db
+              .insert(cardsTable)
+              .values({
+                cardName: parsed.cardName,
+                setName: parsed.setName,
+                cardNumber: parsed.cardNumber,
+                year: parsed.year,
+                quality: parsed.quality,
+                holoType: parsed.holoType,
+                language: "English",
+                status: "reviewed",
+              })
+              .returning();
+
+            // Fetch new price (fall back to original if eBay lookup fails)
+            let finalPrice = currentPrice;
+            try {
+              const pricing = await fetchSuggestedPrice(parsed);
+              if (pricing.suggestedPrice !== null) {
+                finalPrice = pricing.suggestedPrice;
+                await db
+                  .update(cardsTable)
+                  .set({ suggestedPrice: finalPrice, updatedAt: new Date() })
+                  .where(eq(cardsTable.id, card.id));
+                job.priced++;
+              }
+            } catch { /* keep original price */ }
+
+            // Generate new title + description
+            const newTitle = generateTitle({ ...parsed, rarity: null });
+            const newDescription = generateDescription({ ...parsed, rarity: null, notes: null });
+
+            // Insert listing with eBay item ID
+            await db.insert(listingsTable).values({
+              cardId: card.id,
+              ebayListingId: itemId,
+              title: newTitle,
+              description: newDescription,
+              price: finalPrice ?? undefined,
+              status: "active",
+              ebayUrl: `https://www.ebay.com/itm/${itemId}`,
+            });
+
+            // Mark card as listed
+            await db
+              .update(cardsTable)
+              .set({ status: "listed", updatedAt: new Date() })
+              .where(eq(cardsTable.id, card.id));
+
+            job.imported++;
+          } catch {
+            job.errors++;
+          }
+          job.processed++;
+        }),
+      );
+    }
+    job.done = true;
+  })();
+});
+
+// GET /listings/import/:jobId/progress
+router.get("/listings/import/:jobId/progress", (req, res) => {
+  const { jobId } = req.params;
+  const job = importJobs.get(jobId);
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  res.json({
+    processed: job.processed,
+    total: job.total,
+    done: job.done,
+    imported: job.imported,
+    priced: job.priced,
+    errors: job.errors,
+  });
 });
 
 // DELETE /listings/:id
