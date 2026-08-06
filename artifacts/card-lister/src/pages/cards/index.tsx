@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Shell } from "@/components/layout/shell";
 import { Link } from "wouter";
 import { useListCards, useDeleteCard, useBulkCreateListings } from "@workspace/api-client-react";
-import { Search, Filter, Trash2, Tag, Loader2 } from "lucide-react";
+import { Search, Filter, Trash2, Tag, Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CardsPage() {
@@ -51,6 +51,28 @@ export default function CardsPage() {
     }
   };
 
+  const handleExportCsv = async () => {
+    try {
+      const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+      const res = await fetch(`${base}/api/cards/export/ebay-csv`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Export failed" }));
+        toast({ title: "Export failed", description: err.error, variant: "destructive" });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fischtcg-ebay-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "CSV exported", description: "Upload the file in eBay Seller Hub → File Exchange." });
+    } catch {
+      toast({ title: "Export failed", description: "Could not connect to the server.", variant: "destructive" });
+    }
+  };
+
   const handleBulkList = () => {
     bulkCreate.mutate({
       data: { cardIds: Array.from(selectedIds) }
@@ -73,7 +95,14 @@ export default function CardsPage() {
           </div>
           
           <div className="flex gap-2">
-            <Link href="/upload" className="bg-white text-foreground border border-border px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-slate-50 transition-colors inline-block text-center cursor-pointer">
+            <button
+              onClick={handleExportCsv}
+              className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-secondary/90 transition-colors cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              Export to eBay CSV
+            </button>
+            <Link href="/upload" className="bg-primary text-primary-foreground border border-primary px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-primary/90 transition-colors inline-block text-center cursor-pointer">
               Upload New
             </Link>
           </div>

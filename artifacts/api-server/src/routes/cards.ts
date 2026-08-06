@@ -496,4 +496,111 @@ router.get("/cards/:id/pricing", async (req, res) => {
   }
 });
 
+// GET /cards/export/ebay-csv
+// Generates an eBay File Exchange CSV ready to upload to Seller Hub
+router.get("/cards/export/ebay-csv", async (req, res) => {
+  try {
+    const cards = await db
+      .select()
+      .from(cardsTable)
+      .where(sql`${cardsTable.suggestedPrice} IS NOT NULL`)
+      .orderBy(desc(cardsTable.createdAt));
+
+    if (cards.length === 0) {
+      res.status(404).json({ error: "No priced cards to export" });
+      return;
+    }
+
+    // eBay condition IDs for trading cards
+    const conditionId = (quality: string | null): number => {
+      const q = (quality ?? "").toLowerCase();
+      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return 2750;
+      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return 3000;
+      if (q.includes("moderately played") || q.includes("mp")) return 4000;
+      if (q.includes("heavily played") || q.includes("hp")) return 5000;
+      if (q.includes("damaged") || q.includes("poor")) return 7000;
+      return 3000; // default: Very Good
+    };
+
+    const holoLabel = (holoType: string | null): string => {
+      if (holoType === "holo") return "Holo";
+      if (holoType === "reverse_holo") return "Reverse Holo";
+      return "";
+    };
+
+    const makeTitle = (card: typeof cards[0]): string => {
+      const parts = [
+        card.cardName,
+        card.setName,
+        card.cardNumber ? `#${card.cardNumber}` : null,
+        holoLabel(card.holoType),
+        "Pokemon Card",
+        card.quality,
+      ].filter(Boolean).join(" ");
+      return parts.slice(0, 80); // eBay title limit
+    };
+
+    const makeDescription = (card: typeof cards[0]): string => {
+      return [
+        `<b>${card.cardName}</b>`,
+        card.setName ? `Set: ${card.setName}` : null,
+        card.cardNumber ? `Card Number: #${card.cardNumber}` : null,
+        card.year ? `Year: ${card.year}` : null,
+        card.rarity ? `Rarity: ${card.rarity}` : null,
+        card.holoType ? `Foil: ${holoLabel(card.holoType) || "Standard"}` : null,
+        card.quality ? `Condition: ${card.quality}` : null,
+        card.language ? `Language: ${card.language}` : null,
+        `<br>Listed by FischTCG. Fast shipping, tracked via USPS.`,
+      ].filter(Boolean).join("<br>");
+    };
+
+    // eBay File Exchange header — the action column encodes metadata
+    const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";
+    const columns = [
+      ACTION_HEADER,
+      "*Category",
+      "*Title",
+      "*StartPrice",
+      "*Quantity",
+      "*Format",
+      "*Duration",
+      "ConditionID",
+      "Description",
+      "ShippingType",
+      "ShippingService-1:Option",
+      "ShippingService-1:Cost",
+      "ReturnsAcceptedOption",
+    ];
+
+    const escape = (val: string | number) =>
+      `"${String(val).replace(/"/g, '""')}"`;
+
+    const rows = cards.map((card) => [
+      "Add",                          // Action
+      "183454",                        // Pokemon Individual Cards category
+      makeTitle(card),                 // Title (≤80 chars)
+      card.suggestedPrice!.toFixed(2), // StartPrice
+      "1",                             // Quantity
+      "FixedPrice",                    // Format
+      "GTC",                           // Duration (Good Till Cancelled)
+      conditionId(card.quality),       // ConditionID
+      makeDescription(card),           // Description
+      "Flat",                          // ShippingType
+      "USPSFirstClass",                // ShippingService
+      SHIPPING_COST.toFixed(2),        // Shipping cost to buyer
+      "ReturnsNotAccepted",            // Returns
+    ].map(escape).join(","));
+
+    const csv = [columns.map(escape).join(","), ...rows].join("\r\n");
+
+    const filename = `fischtcg-ebay-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (err) {
+    req.log.error({ err }, "Failed to export eBay CSV");
+    res.status(500).json({ error: "Failed to generate CSV" });
+  }
+});
+
 export default router;
