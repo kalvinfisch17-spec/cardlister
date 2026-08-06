@@ -1,0 +1,102 @@
+PS C:\Users\Kalvi> cd C:\Users\Kalvi\cardlister
+PS C:\Users\Kalvi\cardlister> git stash
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pnpm-lock.yaml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pnpm-workspace.yaml', LF will be replaced by CRLF the next time Git touches it
+Saved working directory and index state WIP on main: 9754363 Move supportedArchitectures to .npmrc (pnpm v9+ location), regenerate lockfile with Windows binaries
+PS C:\Users\Kalvi\cardlister> git pull
+remote: Enumerating objects: 139, done.
+remote: Counting objects: 100% (139/139), done.
+remote: Compressing objects: 100% (35/35), done.
+remote: Total 96 (delta 60), reused 96 (delta 60), pack-reused 0 (from 0)
+Unpacking objects: 100% (96/96), 17.98 KiB | 114.00 KiB/s, done.
+From https://github.com/kalvinfisch17-spec/cardlister
+   d5dbd08..7892508  main       -> origin/main
+Updating 9754363..7892508
+Fast-forward
+ .replit                                            |   5 +-
+ README.md                                          |  14 +-
+ artifacts/api-server/src/index.ts                  |  10 +-
+ artifacts/api-server/src/lib/ebay.ts               |   2 +-
+ artifacts/api-server/src/lib/pricing.ts            |  55 ++++
+ artifacts/api-server/src/routes/cards.ts           | 244 ++++++++++----
+ artifacts/api-server/src/routes/listings.ts        | 353 +++++++++++++++++++-
+ artifacts/card-lister/src/App.tsx                  |   2 +
+ .../card-lister/src/components/layout/sidebar.tsx  |  32 +-
+ artifacts/card-lister/src/index.css                | 109 +++----
+ artifacts/card-lister/src/pages/cards/detail.tsx   |  36 ++-
+ artifacts/card-lister/src/pages/cards/index.tsx    | 110 +++++--
+ artifacts/card-lister/src/pages/import.tsx         | 356 +++++++++++++++++++++
+ artifacts/card-lister/src/pages/listings.tsx       |  33 +-
+ artifacts/card-lister/src/pages/upload.tsx         | 230 ++++++++-----
+ artifacts/card-lister/vite.config.ts               |  10 +-
+ ...r-Remove-Item-Recurse-Force-n_1785807916918.txt |  62 ++++
+ ...s-Kalvi-cardlister-PS-C-Users_1786056936404.txt |  51 +++
+ lib/api-client-react/src/generated/api.schemas.ts  |  23 +-
+ lib/api-client-react/src/generated/api.ts          | 150 +++++++++
+ lib/api-spec/openapi.yaml                          |  71 +++-
+ lib/api-zod/src/generated/api.ts                   |  49 ++-
+ .../generated/types/batchAnalyzeInputImagesItem.ts |   3 +
+ lib/api-zod/src/generated/types/card.ts            |   1 +
+ .../src/generated/types/cardAnalyzeInput.ts        |   4 +-
+ lib/api-zod/src/generated/types/cardUpdate.ts      |   1 +
+ .../src/generated/types/getImportProgress200.ts    |  17 +
+ .../src/generated/types/importEbayCsvBody.ts       |  11 +
+ lib/api-zod/src/generated/types/index.ts           |   2 +
+ lib/api-zod/src/index.ts                           |   1 -
+ lib/db/src/schema/cards.ts                         |   3 +
+ lib/db/src/schema/import_jobs.ts                   |  22 ++
+ lib/db/src/schema/index.ts                         |   1 +
+ package.json                                       |   5 +
+ pnpm-lock.yaml                                     | 166 ++++++++++
+ scripts/setup-db.sql                               |  11 +-
+ start.bat                                          |  12 +
+ 37 files changed, 1981 insertions(+), 286 deletions(-)
+ create mode 100644 artifacts/api-server/src/lib/pricing.ts
+ create mode 100644 artifacts/card-lister/src/pages/import.tsx
+ create mode 100644 attached_assets/Pasted-PS-C-Users-Kalvi-cardlister-Remove-Item-Recurse-Force-n_1785807916918.txt
+ create mode 100644 attached_assets/Pasted-PS-C-Users-Kalvi-cd-C-Users-Kalvi-cardlister-PS-C-Users_1786056936404.txt
+ create mode 100644 lib/api-zod/src/generated/types/getImportProgress200.ts
+ create mode 100644 lib/api-zod/src/generated/types/importEbayCsvBody.ts
+ create mode 100644 lib/db/src/schema/import_jobs.ts
+ create mode 100644 start.bat
+PS C:\Users\Kalvi\cardlister> pnpm install
+Scope: all 11 workspace projects
+✓ Lockfile passes supply-chain policies (502 entries in 1.4s)
+Lockfile is up to date, resolution step is skipped
+Packages: +17
++++++++++++++++++
+Progress: resolved 17, reused 0, downloaded 17, added 17, done
+
+devDependencies:
++ concurrently 10.0.4
+
+. preinstall$ node scripts/preinstall.js
+└─ Done in 69ms
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+PS C:\Users\Kalvi\cardlister> pnpm run dev
+Scope: all 11 workspace projects
+✓ Lockfile passes supply-chain policies (verified 4s ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+. preinstall$ node scripts/preinstall.js
+└─ Done in 54ms
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+[ERROR] Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Users\Kalvi\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+
+pnpm: Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Users\Kalvi\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+    at getFinalError (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:89001:14)
+    at makeError (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:91308:21)
+    at getSyncResult (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:93152:10)
+    at spawnSubprocessSync (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:93112:14)
+    at execaCoreSync (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:93042:23)
+    at callBoundExeca (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:95570:23)
+    at boundExeca (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:95547:49)
+    at sync2 (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:95706:10)
+    at runPnpmCli (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:252536:5)
+    at runDepsStatusCheck (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:254302:7)
+PS C:\Users\Kalvi\cardlister>
