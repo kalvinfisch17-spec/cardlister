@@ -34,13 +34,24 @@ const bulkJobs = new Map<
 
 // ─── CSV / Title parsing helpers ─────────────────────────────────────────────
 
-function parseCsv(content: string): Record<string, string>[] {
-  // Handle both comma and tab delimited
-  const lines = content.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length < 2) return [];
+/** Normalise a header string for reliable lookup */
+function normHeader(h: string): string {
+  return h.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
+}
 
-  const isTab = (lines[0].match(/\t/g) ?? []).length > (lines[0].match(/,/g) ?? []).length;
-  const delim = isTab ? "\t" : ",";
+function parseCsv(content: string): { rows: Record<string, string>[]; detectedHeaders: string[] } {
+  // Strip UTF-8 BOM if present
+  const clean = content.replace(/^\uFEFF/, "");
+  const allLines = clean.split(/\r?\n/);
+  const lines = allLines.filter((l) => l.trim());
+  if (lines.length < 2) return { rows: [], detectedHeaders: [] };
+
+  // Detect delimiter from the line with the most delimiters (handles preamble rows)
+  const tabCounts = lines.map((l) => (l.match(/\t/g) ?? []).length);
+  const commaCounts = lines.map((l) => (l.match(/,/g) ?? []).length);
+  const maxTab = Math.max(...tabCounts);
+  const maxComma = Math.max(...commaCounts);
+  const delim = maxTab >= maxComma ? "\t" : ",";
 
   const parseRow = (line: string): string[] => {
     const fields: string[] = [];
@@ -61,17 +72,33 @@ function parseCsv(content: string): Record<string, string>[] {
     return fields;
   };
 
-  const headers = parseRow(lines[0]).map((h) =>
-    h.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").trim(),
-  );
+  // eBay exports sometimes have preamble rows before the real header.
+  // Find the first row whose normalised fields include something that looks
+  // like "item" and "title" — that's the real header row.
+  const ITEM_KEYS = ["item number", "item id", "itemid", "item no", "listing id"];
+  const TITLE_KEYS = ["title", "listing title", "item title"];
 
-  return lines
-    .slice(1)
+  let headerLineIdx = 0;
+  for (let i = 0; i < Math.min(lines.length - 1, 10); i++) {
+    const fields = parseRow(lines[i]).map(normHeader);
+    const hasItem = fields.some((f) => ITEM_KEYS.some((k) => f === k || f.includes("item")));
+    const hasTitle = fields.some((f) => TITLE_KEYS.some((k) => f === k));
+    if (hasItem && hasTitle) { headerLineIdx = i; break; }
+    // Fallback: pick the row with the most columns
+    if (fields.length > parseRow(lines[headerLineIdx]).length) headerLineIdx = i;
+  }
+
+  const headers = parseRow(lines[headerLineIdx]).map(normHeader);
+
+  const rows = lines
+    .slice(headerLineIdx + 1)
     .filter((l) => l.trim())
     .map((line) => {
       const values = parseRow(line);
       return Object.fromEntries(headers.map((h, i) => [h, (values[i] ?? "").trim()]));
     });
+
+  return { rows, detectedHeaders: headers };
 }
 
 function getField(row: Record<string, string>, ...keys: string[]): string | null {
@@ -462,16 +489,17 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
     return;
   }
 
-  const rows = parseCsv(csvContent);
+  const { rows, detectedHeaders } = parseCsv(csvContent);
   const validRows = rows.filter((row) => {
-    const itemId = getField(row, "item number", "item id", "itemid", "item");
+    const itemId = getField(row, "item number", "item id", "itemid", "item no", "listing id");
     const title = getField(row, "title", "listing title", "item title");
     return itemId && title;
   });
 
   if (validRows.length === 0) {
+    const headerSample = detectedHeaders.slice(0, 10).join(", ") || "(none detected)";
     res.status(400).json({
-      error: "No valid rows found. Make sure the CSV has 'Item number' and 'Title' columns.",
+      error: `No valid rows found. Need columns for item number and title. Detected headers: [${headerSample}]`,
     });
     return;
   }
