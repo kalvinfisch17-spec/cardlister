@@ -592,6 +592,68 @@ router.get("/listings/import/:jobId/progress", (req, res) => {
   });
 });
 
+// GET /listings/export/ebay-csv-revise
+// Generates an eBay File Exchange Revise CSV for all listings that have an ebayListingId
+router.get("/listings/export/ebay-csv-revise", async (req, res) => {
+  try {
+    const listings = await db
+      .select({
+        id: listingsTable.id,
+        ebayListingId: listingsTable.ebayListingId,
+        title: listingsTable.title,
+        description: listingsTable.description,
+        price: listingsTable.price,
+      })
+      .from(listingsTable)
+      .where(and(
+        // only rows that actually have an eBay item ID
+        eq(listingsTable.status, "active"),
+      ))
+      .orderBy(desc(listingsTable.createdAt));
+
+    // Filter in JS so we don't need a raw sql IS NOT NULL expression
+    const revisable = listings.filter(
+      (l) => l.ebayListingId && l.ebayListingId.trim() !== "" && l.price != null,
+    );
+
+    if (revisable.length === 0) {
+      res.status(404).json({ error: "No active listings with an eBay Item ID to export" });
+      return;
+    }
+
+    // eBay File Exchange Revise format
+    const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";
+    const columns = [
+      ACTION_HEADER,
+      "ItemID",
+      "*Title",
+      "StartPrice",
+      "Description",
+    ];
+
+    const escape = (val: string | number | null | undefined): string =>
+      `"${String(val ?? "").replace(/"/g, '""')}"`;
+
+    const rows = revisable.map((listing) => [
+      "Revise",
+      listing.ebayListingId!,
+      (listing.title ?? "").slice(0, 80),
+      listing.price!.toFixed(2),
+      listing.description ?? "",
+    ].map(escape).join(","));
+
+    const csv = [columns.map(escape).join(","), ...rows].join("\r\n");
+
+    const filename = `fischtcg-ebay-revise-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (err) {
+    req.log.error({ err }, "Failed to export eBay Revise CSV");
+    res.status(500).json({ error: "Failed to generate Revise CSV" });
+  }
+});
+
 // DELETE /listings/:id
 router.delete("/listings/:id", async (req, res) => {
   const parsed = DeleteListingParams.safeParse(req.params);

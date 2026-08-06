@@ -266,14 +266,15 @@ export default function ImportPage() {
               >
                 View Collection
               </Link>
-              <Link
-                href="/cards"
-                className="border border-border px-6 py-3 rounded-sm font-semibold hover:bg-muted transition-colors inline-block cursor-pointer"
+              <button
+                className="border border-border px-6 py-3 rounded-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
                 onClick={() => {
-                  // trigger CSV export
                   const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-                  fetch(`${base}/api/cards/export/ebay-csv`)
-                    .then(r => r.blob())
+                  fetch(`${base}/api/listings/export/ebay-csv-revise`)
+                    .then(r => {
+                      if (!r.ok) throw new Error("No listings to export");
+                      return r.blob();
+                    })
                     .then(blob => {
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
@@ -281,12 +282,12 @@ export default function ImportPage() {
                       a.download = `fischtcg-revise-${new Date().toISOString().slice(0, 10)}.csv`;
                       a.click();
                       URL.revokeObjectURL(url);
-                    });
-                  return false;
+                    })
+                    .catch(() => alert("No active listings with eBay IDs found to export."));
                 }}
               >
                 Export Revise CSV
-              </Link>
+              </button>
             </div>
 
             {progress.errors > 0 && (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Shell } from "@/components/layout/shell";
 import { useListListings, useDeleteListing } from "@workspace/api-client-react";
-import { Search, ExternalLink, Activity, Filter, Trash2, Loader2 } from "lucide-react";
+import { Search, ExternalLink, Activity, Filter, Trash2, Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ListingsPage() {
@@ -63,9 +63,34 @@ export default function ListingsPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 text-sm font-mono font-medium text-slate-400">
-            <Activity className="w-4 h-4" />
-            {filteredListings.length} results
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm font-mono font-medium text-slate-400">
+              <Activity className="w-4 h-4" />
+              {filteredListings.length} results
+            </div>
+            <button
+              onClick={() => {
+                const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+                fetch(`${base}/api/listings/export/ebay-csv-revise`)
+                  .then(r => {
+                    if (!r.ok) throw new Error("No listings to export");
+                    return r.blob();
+                  })
+                  .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `fischtcg-revise-${new Date().toISOString().slice(0, 10)}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  })
+                  .catch(() => alert("No active listings with eBay IDs found to export."));
+              }}
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300 border border-slate-600 px-3 py-1.5 rounded-sm hover:bg-slate-800 hover:border-slate-500 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export Revise CSV
+            </button>
           </div>
         </div>
 
