@@ -483,6 +483,7 @@ router.get("/listings/:id", async (req, res) => {
 
 // POST /listings/import/ebay-csv
 router.post("/listings/import/ebay-csv", async (req, res) => {
+  try {
   const { csvContent } = req.body ?? {};
   if (!csvContent || typeof csvContent !== "string") {
     res.status(400).json({ error: "csvContent is required" });
@@ -499,7 +500,7 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
   if (validRows.length === 0) {
     const headerSample = detectedHeaders.slice(0, 10).join(", ") || "(none detected)";
     res.status(400).json({
-      error: `No valid rows found. Need columns for item number and title. Detected headers: [${headerSample}]`,
+      error: `No valid rows found. Detected headers: [${headerSample}]`,
     });
     return;
   }
@@ -519,6 +520,11 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
   });
 
   res.json({ jobId, total: validRows.length });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: `Server error: ${msg}` });
+    return;
+  }
 
   // Process in background with concurrency of 5
   // We track counters locally and flush to DB after each batch for efficiency
