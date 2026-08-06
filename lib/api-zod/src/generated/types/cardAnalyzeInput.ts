@@ -7,6 +7,8 @@
  */
 
 export interface CardAnalyzeInput {
-  /** Base64-encoded image data */
+  /** Base64-encoded front image data */
   imageBase64: string;
+  /** Base64-encoded back image data (optional) */
+  imageBackBase64?: string;
 }

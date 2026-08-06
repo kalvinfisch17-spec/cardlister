@@ -7,5 +7,8 @@
  */
 
 export type BatchAnalyzeInputImagesItem = {
+  /** Base64-encoded front image */
   imageBase64: string;
+  /** Base64-encoded back image (optional) */
+  imageBackBase64?: string;
 };

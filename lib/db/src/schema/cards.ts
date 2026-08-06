@@ -24,6 +24,7 @@ export const cardStatusEnum = pgEnum("card_status", [
 export const cardsTable = pgTable("cards", {
   id: serial("id").primaryKey(),
   imageUrl: text("image_url"),
+  imageUrlBack: text("image_url_back"),
   cardName: text("card_name"),
   setName: text("set_name"),
   cardNumber: text("card_number"),

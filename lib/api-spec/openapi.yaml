@@ -517,7 +517,10 @@ components:
       properties:
         imageBase64:
           type: string
-          description: Base64-encoded image data
+          description: Base64-encoded front image data
+        imageBackBase64:
+          type: string
+          description: Base64-encoded back image data (optional)
 
     CardAnalysisResult:
       type: object
@@ -560,6 +563,10 @@ components:
             properties:
               imageBase64:
                 type: string
+                description: Base64-encoded front image
+              imageBackBase64:
+                type: string
+                description: Base64-encoded back image (optional)
 
     BatchJob:
       type: object

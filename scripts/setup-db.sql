@@ -8,8 +8,9 @@ CREATE TYPE IF NOT EXISTS listing_status AS ENUM ('draft', 'active', 'sold', 'en
 
 -- Cards table
 CREATE TABLE IF NOT EXISTS cards (
-  id          SERIAL PRIMARY KEY,
-  image_url   TEXT,
+  id             SERIAL PRIMARY KEY,
+  image_url      TEXT,
+  image_url_back TEXT,
   card_name   TEXT,
   set_name    TEXT,
   card_number TEXT,
@@ -38,6 +39,9 @@ CREATE TABLE IF NOT EXISTS listings (
   created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Migration: add image_url_back if upgrading an existing install
+ALTER TABLE cards ADD COLUMN IF NOT EXISTS image_url_back TEXT;
 
 -- eBay tokens table
 CREATE TABLE IF NOT EXISTS ebay_tokens (

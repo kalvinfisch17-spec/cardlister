@@ -126,7 +126,8 @@ export const GetCardStatsResponse = zod.object({
  * @summary Analyze a single card image with AI
  */
 export const AnalyzeCardBody = zod.object({
-  "imageBase64": zod.string().describe('Base64-encoded image data')
+  "imageBase64": zod.string().describe('Base64-encoded front image data'),
+  "imageBackBase64": zod.string().optional().describe('Base64-encoded back image data (optional)')
 })
 
 export const AnalyzeCardResponse = zod.object({
@@ -149,7 +150,8 @@ export const AnalyzeCardResponse = zod.object({
  */
 export const BatchAnalyzeCardsBody = zod.object({
   "images": zod.array(zod.object({
-  "imageBase64": zod.string()
+  "imageBase64": zod.string().describe('Base64-encoded front image'),
+  "imageBackBase64": zod.string().optional().describe('Base64-encoded back image (optional)')
 }))
 })
 

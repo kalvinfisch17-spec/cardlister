@@ -176,9 +176,9 @@ router.post("/cards/analyze", async (req, res) => {
   try {
     const analysis = await analyzeCardImage(parsed.data.imageBase64);
 
-    // Save the image as data URL and create a card record
-    const imageUrl = parsed.data.imageBase64.startsWith("data:")
-      ? null // Don't store full base64 in DB — just the analysis result
+    const imageUrl = null; // front stored externally if needed
+    const imageBackUrl = parsed.data.imageBackBase64
+      ? `data:image/jpeg;base64,${parsed.data.imageBackBase64}`
       : null;
 
     // Fetch pricing in parallel with DB insert
@@ -187,6 +187,7 @@ router.post("/cards/analyze", async (req, res) => {
         .insert(cardsTable)
         .values({
           imageUrl,
+          imageUrlBack: imageBackUrl,
           cardName: analysis.cardName,
           setName: analysis.setName,
           cardNumber: analysis.cardNumber,
@@ -257,6 +258,9 @@ router.post("/cards/batch-analyze", async (req, res) => {
     for (const img of images) {
       try {
         const analysis = await analyzeCardImage(img.imageBase64);
+        const imageBackUrl = img.imageBackBase64
+          ? `data:image/jpeg;base64,${img.imageBackBase64}`
+          : null;
         const [insertResult, pricing] = await Promise.all([
           db
             .insert(cardsTable)
@@ -270,6 +274,7 @@ router.post("/cards/batch-analyze", async (req, res) => {
               language: analysis.language,
               rarity: analysis.rarity,
               status: "pending",
+              imageUrlBack: imageBackUrl,
             })
             .returning(),
           fetchSuggestedPrice(analysis),

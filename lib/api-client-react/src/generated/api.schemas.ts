@@ -121,8 +121,10 @@ export interface CardUpdate {
 }
 
 export interface CardAnalyzeInput {
-  /** Base64-encoded image data */
+  /** Base64-encoded front image data */
   imageBase64: string;
+  /** Base64-encoded back image data (optional) */
+  imageBackBase64?: string;
 }
 
 /**
@@ -162,7 +164,10 @@ export interface CardAnalysisResult {
 }
 
 export type BatchAnalyzeInputImagesItem = {
+  /** Base64-encoded front image */
   imageBase64: string;
+  /** Base64-encoded back image (optional) */
+  imageBackBase64?: string;
 };
 
 export interface BatchAnalyzeInput {
