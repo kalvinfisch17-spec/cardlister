@@ -221,7 +221,8 @@ export const UpdateCardBody = zod.object({
   "rarity": zod.string().optional(),
   "notes": zod.string().optional(),
   "status": zod.enum(['pending', 'reviewed', 'listed']).optional(),
-  "suggestedPrice": zod.number().optional()
+  "suggestedPrice": zod.number().optional(),
+  "needsPriceReview": zod.boolean().optional()
 })
 
 export const UpdateCardResponse = zod.object({

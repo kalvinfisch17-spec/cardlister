@@ -119,6 +119,7 @@ export interface CardUpdate {
   notes?: string;
   status?: CardUpdateStatus;
   suggestedPrice?: number;
+  needsPriceReview?: boolean;
 }
 
 export interface CardAnalyzeInput {

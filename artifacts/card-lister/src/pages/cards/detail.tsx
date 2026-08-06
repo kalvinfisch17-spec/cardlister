@@ -8,7 +8,7 @@ import {
   useCreateListing,
   useAnalyzeCard
 } from "@workspace/api-client-react";
-import { ArrowLeft, ExternalLink, Sparkles, Loader2, Save, Tag } from "lucide-react";
+import { ArrowLeft, ExternalLink, Sparkles, Loader2, Save, Tag, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CardDetailPage() {
@@ -73,6 +73,18 @@ export default function CardDetailPage() {
         refetchCard();
       }
     });
+  };
+
+  const handleMarkResolved = async () => {
+    await updateCard.mutateAsync({
+      id,
+      data: {
+        needsPriceReview: false,
+        ...(formData.suggestedPrice ? { suggestedPrice: parseFloat(formData.suggestedPrice) } : {})
+      }
+    });
+    toast({ title: "Price Resolved", description: "Card removed from price review queue." });
+    refetchCard();
   };
 
   const handleReanalyze = async () => {
@@ -158,6 +170,24 @@ export default function CardDetailPage() {
           </div>
         </div>
 
+        {card.needsPriceReview && (
+          <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-sm px-4 py-3">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-300">Manual price review needed</p>
+              <p className="text-xs text-amber-400/80 mt-0.5 font-mono">No eBay sold listings were found during import. Set a price above and click "Mark as Resolved" to dismiss this flag.</p>
+            </div>
+            <button
+              onClick={handleMarkResolved}
+              disabled={updateCard.isPending}
+              className="shrink-0 flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold px-3 py-1.5 rounded-sm transition-colors shadow-sm disabled:opacity-50"
+            >
+              {updateCard.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+              Mark as Resolved
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 flex flex-col gap-6">
             <div className="cockpit-panel p-2">
@@ -200,7 +230,7 @@ export default function CardDetailPage() {
                     
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Recent Sold Listings</div>
                     <div className="flex flex-col gap-2">
-                      {pricing.soldListings.map((sold, idx) => (
+                      {(pricing.soldListings ?? []).map((sold, idx) => (
                         <a key={idx} href={sold.url} target="_blank" rel="noreferrer" className="group flex justify-between items-center p-2 text-sm border border-border rounded-sm hover:border-primary/50 transition-colors">
                           <div className="truncate pr-4 flex-1">
                             <span className="font-medium group-hover:text-primary transition-colors truncate block">{sold.title}</span>
@@ -212,7 +242,7 @@ export default function CardDetailPage() {
                           </div>
                         </a>
                       ))}
-                      {pricing.soldListings.length === 0 && (
+                      {(pricing.soldListings ?? []).length === 0 && (
                         <div className="text-sm text-center py-2 text-muted-foreground">No recent comps found.</div>
                       )}
                     </div>

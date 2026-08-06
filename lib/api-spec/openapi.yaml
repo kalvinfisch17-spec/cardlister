@@ -570,6 +570,8 @@ components:
           enum: [pending, reviewed, listed]
         suggestedPrice:
           type: number
+        needsPriceReview:
+          type: boolean
 
     CardAnalyzeInput:
       type: object
