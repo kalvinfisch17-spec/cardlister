@@ -16,6 +16,7 @@ interface ImportProgress {
   imported: number;
   priced: number;
   errors: number;
+  notPriced: number;
 }
 
 export default function ImportPage() {
@@ -72,7 +73,7 @@ export default function ImportPage() {
       }
       const data = await res.json() as ImportJob;
       setJob(data);
-      setProgress({ processed: 0, total: data.total, done: false, imported: 0, priced: 0, errors: 0 });
+      setProgress({ processed: 0, total: data.total, done: false, imported: 0, priced: 0, errors: 0, notPriced: 0 });
 
       // Poll for progress
       const base2 = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -258,6 +259,18 @@ export default function ImportPage() {
                 <div className="text-xs text-muted-foreground mt-1 font-mono">Skipped</div>
               </div>
             </div>
+
+            {progress.notPriced > 0 && (
+              <div className="w-full flex items-start gap-2 text-amber-400 text-sm bg-amber-500/10 border border-amber-500/30 rounded p-3 text-left">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  <strong>{progress.notPriced} card{progress.notPriced === 1 ? "" : "s"}</strong> kept their original eBay price — no recent sold listings were found.{" "}
+                  <Link href="/cards?review=1" className="underline font-semibold hover:text-amber-300 cursor-pointer">
+                    Review manually →
+                  </Link>
+                </span>
+              </div>
+            )}
 
             <div className="flex gap-3">
               <Link

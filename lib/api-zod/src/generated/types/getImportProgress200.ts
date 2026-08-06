@@ -13,4 +13,5 @@ export type GetImportProgress200 = {
   imported: number;
   priced: number;
   errors: number;
+  notPriced: number;
 };

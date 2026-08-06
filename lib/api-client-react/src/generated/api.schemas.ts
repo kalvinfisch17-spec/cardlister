@@ -58,6 +58,7 @@ export interface Card {
   status: CardStatus;
   /** @nullable */
   suggestedPrice?: number | null;
+  needsPriceReview?: boolean;
   /** @nullable */
   ebayListingId?: string | null;
   createdAt: string;
@@ -317,6 +318,7 @@ export type GetImportProgress200 = {
   imported: number;
   priced: number;
   errors: number;
+  notPriced: number;
 };
 
 export type ListListingsParams = {

@@ -29,7 +29,7 @@ export * from './ebayCallbackParams';
 export * from './ebayStatus';
 export * from './getImportProgress200';
 export * from './healthStatus';
-// ImportEbayCsvBody excluded — Zod schema in api.ts takes precedence
+export * from './importEbayCsvBody';
 export * from './listCardsHoloType';
 export * from './listCardsParams';
 export * from './listCardsStatus';

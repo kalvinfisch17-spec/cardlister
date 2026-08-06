@@ -265,7 +265,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [processed, total, done, imported, priced, errors]
+                required: [processed, total, done, imported, priced, errors, notPriced]
                 properties:
                   processed:
                     type: integer
@@ -278,6 +278,8 @@ paths:
                   priced:
                     type: integer
                   errors:
+                    type: integer
+                  notPriced:
                     type: integer
 
   /listings:
@@ -501,6 +503,8 @@ components:
           enum: [pending, reviewed, listed]
         suggestedPrice:
           type: ["number", "null"]
+        needsPriceReview:
+          type: boolean
         ebayListingId:
           type: ["string", "null"]
         createdAt:

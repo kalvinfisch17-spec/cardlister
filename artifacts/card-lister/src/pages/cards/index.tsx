@@ -1,14 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shell } from "@/components/layout/shell";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useListCards, useDeleteCard, useBulkCreateListings } from "@workspace/api-client-react";
-import { Search, Filter, Trash2, Tag, Loader2, Download } from "lucide-react";
+import { Search, Filter, Trash2, Tag, Loader2, Download, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CardsPage() {
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const reviewParam = urlParams.get("review") === "1";
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [reviewFilter, setReviewFilter] = useState<boolean>(reviewParam);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // Sync reviewFilter when URL param changes
+  useEffect(() => {
+    setReviewFilter(reviewParam);
+  }, [reviewParam]);
   
   const { data: cards, isLoading, refetch } = useListCards({}, { query: { queryKey: ["cards"] } });
   const deleteCard = useDeleteCard();
@@ -21,8 +31,9 @@ export default function CardsPage() {
       card.setName?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || card.status === statusFilter;
+    const matchesReview = !reviewFilter || card.needsPriceReview === true;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesReview;
   }) || [];
 
   const toggleSelectAll = () => {
@@ -109,30 +120,44 @@ export default function CardsPage() {
         </div>
 
         <div className="cockpit-panel p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-          <div className="flex gap-4 w-full sm:w-auto">
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Search cards..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-background border border-input rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-mono"
-              />
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
+            <div className="flex gap-4">
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  placeholder="Search cards..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-background border border-input rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                />
+              </div>
+              <div className="relative">
+                <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <select 
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="pl-9 pr-8 py-2 bg-background border border-input rounded-sm text-sm appearance-none focus:outline-none focus:border-primary font-mono"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="reviewed">Reviewed</option>
+                  <option value="listed">Listed</option>
+                </select>
+              </div>
             </div>
-            <div className="relative">
-              <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 bg-background border border-input rounded-sm text-sm appearance-none focus:outline-none focus:border-primary font-mono"
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="reviewed">Reviewed</option>
-                <option value="listed">Listed</option>
-              </select>
-            </div>
+            {reviewFilter && (
+              <div className="flex items-center gap-2 text-amber-400 text-xs bg-amber-500/10 border border-amber-500/30 rounded px-3 py-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span className="font-mono">Showing cards that need manual price review</span>
+                <button
+                  onClick={() => setReviewFilter(false)}
+                  className="ml-auto text-amber-400 hover:text-amber-200 font-semibold underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
           
           {selectedIds.size > 0 && (

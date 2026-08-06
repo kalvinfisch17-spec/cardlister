@@ -42,6 +42,7 @@ const importJobs = new Map<
     imported: number;
     priced: number;
     errors: number;
+    notPriced: number;
   }
 >();
 
@@ -490,7 +491,7 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
   }
 
   const jobId = randomUUID();
-  importJobs.set(jobId, { total: validRows.length, processed: 0, done: false, imported: 0, priced: 0, errors: 0 });
+  importJobs.set(jobId, { total: validRows.length, processed: 0, done: false, imported: 0, priced: 0, errors: 0, notPriced: 0 });
   res.json({ jobId, total: validRows.length });
 
   // Process in background with concurrency of 5
@@ -529,10 +530,12 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
 
             // Fetch new price (fall back to original if eBay lookup fails)
             let finalPrice = currentPrice;
+            let gotNewPrice = false;
             try {
               const pricing = await fetchSuggestedPrice(parsed);
               if (pricing.suggestedPrice !== null) {
                 finalPrice = pricing.suggestedPrice;
+                gotNewPrice = true;
                 await db
                   .update(cardsTable)
                   .set({ suggestedPrice: finalPrice, updatedAt: new Date() })
@@ -540,6 +543,15 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
                 job.priced++;
               }
             } catch { /* keep original price */ }
+
+            if (!gotNewPrice) {
+              // Mark card as needing manual price review
+              await db
+                .update(cardsTable)
+                .set({ needsPriceReview: true, updatedAt: new Date() })
+                .where(eq(cardsTable.id, card.id));
+              job.notPriced++;
+            }
 
             // Generate new title + description
             const newTitle = generateTitle({ ...parsed, rarity: null });
@@ -589,6 +601,7 @@ router.get("/listings/import/:jobId/progress", (req, res) => {
     imported: job.imported,
     priced: job.priced,
     errors: job.errors,
+    notPriced: job.notPriced,
   });
 });
 

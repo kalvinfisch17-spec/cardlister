@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   real,
+  boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -36,6 +37,7 @@ export const cardsTable = pgTable("cards", {
   notes: text("notes"),
   status: cardStatusEnum("status").default("pending").notNull(),
   suggestedPrice: real("suggested_price"),
+  needsPriceReview: boolean("needs_price_review").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

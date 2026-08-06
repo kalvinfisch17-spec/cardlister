@@ -36,6 +36,7 @@ export interface Card {
   status: CardStatus;
   /** @nullable */
   suggestedPrice?: number | null;
+  needsPriceReview?: boolean;
   /** @nullable */
   ebayListingId?: string | null;
   createdAt: Date;

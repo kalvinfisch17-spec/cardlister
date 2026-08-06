@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS listings (
 -- Migration: add image_url_back if upgrading an existing install
 ALTER TABLE cards ADD COLUMN IF NOT EXISTS image_url_back TEXT;
 
+-- Migration: add needs_price_review flag for cards where eBay pricing wasn't found
+ALTER TABLE cards ADD COLUMN IF NOT EXISTS needs_price_review BOOLEAN NOT NULL DEFAULT false;
+
 -- eBay tokens table
 CREATE TABLE IF NOT EXISTS ebay_tokens (
   id            SERIAL PRIMARY KEY,

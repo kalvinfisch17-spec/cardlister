@@ -40,6 +40,7 @@ export const ListCardsResponseItem = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -78,6 +79,7 @@ export const CreateCardResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -115,6 +117,7 @@ export const GetCardStatsResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -192,6 +195,7 @@ export const GetCardResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -234,6 +238,7 @@ export const UpdateCardResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -298,7 +303,8 @@ export const GetImportProgressResponse = zod.object({
   "done": zod.boolean(),
   "imported": zod.number().int(),
   "priced": zod.number().int(),
-  "errors": zod.number().int()
+  "errors": zod.number().int(),
+  "notPriced": zod.number().int()
 })
 
 
@@ -326,6 +332,7 @@ export const ListListingsResponseItem = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -369,6 +376,7 @@ export const CreateListingResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -434,6 +442,7 @@ export const GetListingStatsResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -474,6 +483,7 @@ export const GetListingResponse = zod.object({
   "notes": zod.string().nullish(),
   "status": zod.enum(['pending', 'reviewed', 'listed']),
   "suggestedPrice": zod.number().nullish(),
+  "needsPriceReview": zod.boolean().optional(),
   "ebayListingId": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
