@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "node scripts/preinstall.js",
-    "dev": "concurrently --names \"api,web\" --prefix-colors \"cyan,magenta\" \"PORT=5001 BASE_PATH=/api pnpm --filter @workspace/api-server run dev\" \"PORT=3000 BASE_PATH=/ pnpm --filter @workspace/card-lister run dev\"",
+    "dev": "concurrently --names \"api,web\" --prefix-colors \"cyan,magenta\" \"cross-env PORT=5001 BASE_PATH=/api pnpm --filter @workspace/api-server run dev\" \"cross-env PORT=3000 BASE_PATH=/ pnpm --filter @workspace/card-lister run dev\"",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@esbuild/win32-x64": "0.27.3",
+    "cross-env": "^7.0.3",
     "@rollup/rollup-win32-x64-msvc": "^4.62.4",
     "@tailwindcss/oxide-win32-x64-msvc": "^4.3.3",
     "concurrently": "^10.0.4",
