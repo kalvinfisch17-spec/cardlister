@@ -72,14 +72,22 @@ pnpm --filter @workspace/db run push
 
 ### 4. Run the app
 
-Open two terminals:
+**Option A — single command (cross-platform):**
+```bash
+pnpm run dev
+```
 
-**Terminal 1 — API server:**
+**Option B — Windows one-click:**
+Double-click `start.bat` in the repo root. It opens two terminal windows, one per server.
+
+**Option C — manual (two terminals):**
+
+Terminal 1 — API server:
 ```bash
 PORT=5001 BASE_PATH=/api pnpm --filter @workspace/api-server run dev
 ```
 
-**Terminal 2 — Frontend:**
+Terminal 2 — Frontend:
 ```bash
 PORT=3000 BASE_PATH=/ pnpm --filter @workspace/card-lister run dev
 ```
