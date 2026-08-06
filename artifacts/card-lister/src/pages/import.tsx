@@ -26,6 +26,7 @@ export default function ImportPage() {
   const [job, setJob] = useState<ImportJob | null>(null);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [pollError, setPollError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
@@ -59,6 +60,7 @@ export default function ImportPage() {
   const startImport = async () => {
     if (!csvContent) return;
     setIsStarting(true);
+    setPollError(null);
     try {
       const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
       const res = await fetch(`${base}/api/listings/import/ebay-csv`, {
@@ -80,6 +82,16 @@ export default function ImportPage() {
       pollRef.current = setInterval(async () => {
         try {
           const r = await fetch(`${base2}/api/listings/import/${data.jobId}/progress`);
+          if (r.status === 404) {
+            // Server restarted and lost track of the job
+            const errData = await r.json().catch(() => ({ error: "Job not found" }));
+            setPollError(errData.error ?? "Job not found. The server may have restarted — please start a new import.");
+            if (pollRef.current) {
+              clearInterval(pollRef.current);
+              pollRef.current = null;
+            }
+            return;
+          }
           if (r.ok) {
             const p = await r.json() as ImportProgress;
             setProgress(p);
@@ -88,7 +100,7 @@ export default function ImportPage() {
               pollRef.current = null;
             }
           }
-        } catch { /* keep polling */ }
+        } catch { /* keep polling on network errors */ }
       }, 1000);
     } catch {
       toast({ title: "Import failed", description: "Could not connect to the server.", variant: "destructive" });
@@ -194,8 +206,35 @@ export default function ImportPage() {
           </div>
         )}
 
+        {/* Poll error — server restarted mid-import */}
+        {job && pollError && (
+          <div className="cockpit-panel p-8 flex flex-col items-center gap-6 text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center"
+              style={{ background: "hsl(25 90% 50% / 0.15)" }}>
+              <AlertCircle className="w-10 h-10 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-display font-bold mb-2">Import Interrupted</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">{pollError}</p>
+            </div>
+            <button
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-sm font-semibold hover:bg-primary/90 transition-colors"
+              onClick={() => {
+                setJob(null);
+                setProgress(null);
+                setPollError(null);
+                setCsvContent(null);
+                setFileName(null);
+                setPreviewCount(0);
+              }}
+            >
+              Start Over
+            </button>
+          </div>
+        )}
+
         {/* Progress */}
-        {job && progress && !isDone && (
+        {job && progress && !isDone && !pollError && (
           <div className="cockpit-panel p-8 flex flex-col items-center gap-6">
             <Loader2 className="w-16 h-16 text-primary animate-spin" />
             <div className="text-center">
@@ -234,7 +273,7 @@ export default function ImportPage() {
         )}
 
         {/* Done */}
-        {job && progress && isDone && (
+        {job && progress && isDone && !pollError && (
           <div className="cockpit-panel p-8 flex flex-col items-center gap-6 text-center">
             <div className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{ background: "hsl(160 80% 45% / 0.15)" }}>

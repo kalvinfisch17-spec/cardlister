@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { cardsTable, listingsTable } from "@workspace/db";
+import { cardsTable, listingsTable, importJobsTable } from "@workspace/db";
 import { eq, desc, and, sum, count } from "drizzle-orm";
 import {
   CreateListingBody,
@@ -29,20 +29,6 @@ const bulkJobs = new Map<
     processed: number;
     done: boolean;
     listingIds: number[];
-  }
->();
-
-// In-memory store for import jobs
-const importJobs = new Map<
-  string,
-  {
-    total: number;
-    processed: number;
-    done: boolean;
-    imported: number;
-    priced: number;
-    errors: number;
-    notPriced: number;
   }
 >();
 
@@ -491,12 +477,37 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
   }
 
   const jobId = randomUUID();
-  importJobs.set(jobId, { total: validRows.length, processed: 0, done: false, imported: 0, priced: 0, errors: 0, notPriced: 0 });
+
+  // Persist job to DB so progress survives server restarts
+  await db.insert(importJobsTable).values({
+    id: jobId,
+    total: validRows.length,
+    processed: 0,
+    done: false,
+    imported: 0,
+    priced: 0,
+    errors: 0,
+    notPriced: 0,
+  });
+
   res.json({ jobId, total: validRows.length });
 
   // Process in background with concurrency of 5
+  // We track counters locally and flush to DB after each batch for efficiency
   (async () => {
-    const job = importJobs.get(jobId)!;
+    let processed = 0;
+    let imported = 0;
+    let priced = 0;
+    let errors = 0;
+    let notPriced = 0;
+
+    const flushProgress = async (done = false) => {
+      await db
+        .update(importJobsTable)
+        .set({ processed, imported, priced, errors, notPriced, done, updatedAt: new Date() })
+        .where(eq(importJobsTable.id, jobId));
+    };
+
     const CONCURRENCY = 5;
 
     for (let i = 0; i < validRows.length; i += CONCURRENCY) {
@@ -540,7 +551,7 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
                   .update(cardsTable)
                   .set({ suggestedPrice: finalPrice, updatedAt: new Date() })
                   .where(eq(cardsTable.id, card.id));
-                job.priced++;
+                priced++;
               }
             } catch { /* keep original price */ }
 
@@ -550,7 +561,7 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
                 .update(cardsTable)
                 .set({ needsPriceReview: true, updatedAt: new Date() })
                 .where(eq(cardsTable.id, card.id));
-              job.notPriced++;
+              notPriced++;
             }
 
             // Generate new title + description
@@ -574,35 +585,51 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
               .set({ status: "listed", updatedAt: new Date() })
               .where(eq(cardsTable.id, card.id));
 
-            job.imported++;
+            imported++;
           } catch {
-            job.errors++;
+            errors++;
           }
-          job.processed++;
+          processed++;
         }),
       );
+
+      // Flush progress to DB after each batch
+      await flushProgress(false);
     }
-    job.done = true;
+
+    // Mark job as done
+    await flushProgress(true);
   })();
 });
 
 // GET /listings/import/:jobId/progress
-router.get("/listings/import/:jobId/progress", (req, res) => {
+router.get("/listings/import/:jobId/progress", async (req, res) => {
   const { jobId } = req.params;
-  const job = importJobs.get(jobId);
-  if (!job) {
-    res.status(404).json({ error: "Job not found" });
-    return;
+  try {
+    const [job] = await db
+      .select()
+      .from(importJobsTable)
+      .where(eq(importJobsTable.id, jobId))
+      .limit(1);
+
+    if (!job) {
+      res.status(404).json({ error: "Job not found. The server may have restarted — please start a new import." });
+      return;
+    }
+
+    res.json({
+      processed: job.processed,
+      total: job.total,
+      done: job.done,
+      imported: job.imported,
+      priced: job.priced,
+      errors: job.errors,
+      notPriced: job.notPriced,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to get import job progress");
+    res.status(500).json({ error: "Failed to retrieve job progress" });
   }
-  res.json({
-    processed: job.processed,
-    total: job.total,
-    done: job.done,
-    imported: job.imported,
-    priced: job.priced,
-    errors: job.errors,
-    notPriced: job.notPriced,
-  });
 });
 
 // GET /listings/export/ebay-csv-revise
