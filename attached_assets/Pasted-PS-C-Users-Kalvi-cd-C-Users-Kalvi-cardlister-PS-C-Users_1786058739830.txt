@@ -1,0 +1,51 @@
+PS C:\Users\Kalvi> cd C:\Users\Kalvi\cardlister
+PS C:\Users\Kalvi\cardlister> git pull
+remote: Enumerating objects: 14, done.
+remote: Counting objects: 100% (14/14), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 9 (delta 6), reused 9 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 2.97 KiB | 190.00 KiB/s, done.
+From https://github.com/kalvinfisch17-spec/cardlister
+   58fe0f7..e19e137  main       -> origin/main
+Updating 58fe0f7..e19e137
+error: Your local changes to the following files would be overwritten by merge:
+        pnpm-workspace.yaml
+Please commit your changes or stash them before you merge.
+Aborting
+PS C:\Users\Kalvi\cardlister> pnpm install
+[WARN] The "pnpm" field in package.json is no longer read by pnpm. The following keys were ignored: "pnpm.onlyBuiltDependencies". See https://pnpm.io/settings for the new home of each setting.
+Scope: all 11 workspace projects
+✓ Lockfile passes supply-chain policies (verified 4m ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+. preinstall$ node scripts/preinstall.js
+└─ Done in 51ms
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+PS C:\Users\Kalvi\cardlister> pnpm run dev
+[WARN] The "pnpm" field in package.json is no longer read by pnpm. The following keys were ignored: "pnpm.onlyBuiltDependencies". See https://pnpm.io/settings for the new home of each setting.
+[WARN] The "pnpm" field in package.json is no longer read by pnpm. The following keys were ignored: "pnpm.onlyBuiltDependencies". See https://pnpm.io/settings for the new home of each setting.
+Scope: all 11 workspace projects
+✓ Lockfile passes supply-chain policies (verified 4m ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+. preinstall$ node scripts/preinstall.js
+└─ Done in 52ms
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+[ERROR] Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Users\Kalvi\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+
+pnpm: Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Users\Kalvi\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+    at getFinalError (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:89001:14)
+    at makeError (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:91308:21)
+    at getSyncResult (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:93152:10)
+    at spawnSubprocessSync (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:93112:14)
+    at execaCoreSync (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:93042:23)
+    at callBoundExeca (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:95570:23)
+    at boundExeca (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:95547:49)
+    at sync2 (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:95706:10)
+    at runPnpmCli (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:252536:5)
+    at runDepsStatusCheck (file:///C:/Users/Kalvi/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:254302:7)
+PS C:\Users\Kalvi\cardlister>
