@@ -166,7 +166,32 @@ function parsePokemonTitle(title: string): {
 
   rem = rem.replace(/[#|•·]+/g, " ").replace(/\s+/g, " ").trim();
 
-  return { cardName: rem || null, setName: null, cardNumber, year, quality, holoType };
+  // Extract set name from eBay title prefix format: "SV06: Twilight Masquerade Sandslash"
+  // Pattern: <CODE>: <WORD1> <WORD2> <CardName...>
+  // Pokemon TCG set names are almost always 2 words (Twilight Masquerade, Darkness Ablaze, etc.)
+  let setName: string | null = null;
+  let cardName: string | null = null;
+  const setCodeMatch = rem.match(/^([A-Z]{1,5}\d{1,3}[a-z]?):\s+(.*)/);
+  if (setCodeMatch) {
+    const code = setCodeMatch[1];          // e.g. "SV06"
+    const afterCode = setCodeMatch[2].trim(); // e.g. "Twilight Masquerade Sandslash"
+    const words = afterCode.split(/\s+/);
+    if (words.length >= 3) {
+      // First 2 words = set name, rest = card name
+      setName = `${code}: ${words.slice(0, 2).join(" ")}`;
+      cardName = words.slice(2).join(" ") || null;
+    } else if (words.length === 2) {
+      setName = `${code}: ${words[0]}`;
+      cardName = words[1] || null;
+    } else {
+      setName = code;
+      cardName = afterCode || null;
+    }
+  } else {
+    cardName = rem || null;
+  }
+
+  return { cardName, setName, cardNumber, year, quality, holoType };
 }
 
 // GET /listings/stats
