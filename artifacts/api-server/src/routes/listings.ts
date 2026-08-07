@@ -589,12 +589,16 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
             } catch { /* keep original price */ }
 
             if (!gotNewPrice) {
-              // Mark card as needing manual price review
-              await db
-                .update(cardsTable)
-                .set({ needsPriceReview: true, updatedAt: new Date() })
-                .where(eq(cardsTable.id, card.id));
               notPriced++;
+              // Only flag for manual review if there's no price at all.
+              // If the CSV had a price we keep it — eBay re-pricing is a bonus,
+              // not a requirement. Cards with a known price don't need manual entry.
+              if (finalPrice === null) {
+                await db
+                  .update(cardsTable)
+                  .set({ needsPriceReview: true, updatedAt: new Date() })
+                  .where(eq(cardsTable.id, card.id));
+              }
             }
 
             // Generate new title + description
