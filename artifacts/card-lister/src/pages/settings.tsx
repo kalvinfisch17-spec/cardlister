@@ -4,8 +4,9 @@ import {
   useGetEbayAuthUrl, 
   useDisconnectEbay 
 } from "@workspace/api-client-react";
-import { ShoppingBag, CheckCircle2, ShieldAlert, Loader2, ArrowRight } from "lucide-react";
+import { ShoppingBag, CheckCircle2, ShieldAlert, Loader2, ArrowRight, RefreshCw, AlertTriangle, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function SettingsPage() {
   const { data: status, isLoading: statusLoading, refetch } = useGetEbayStatus({ query: { queryKey: ["ebayStatus"] } });
@@ -13,12 +14,47 @@ export default function SettingsPage() {
   const disconnect = useDisconnectEbay();
   const { toast } = useToast();
 
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateDismissed, setRegenerateDismissed] = useState(() => {
+    return localStorage.getItem("descriptionUpdateNoticeDismissed") === "true";
+  });
+
   const handleDisconnect = async () => {
     if (confirm("Disconnect your eBay account? You won't be able to list new cards until you reconnect.")) {
       await disconnect.mutateAsync();
       toast({ title: "Disconnected", description: "eBay account successfully disconnected." });
       refetch();
     }
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+    try {
+      const r = await fetch(`${base}/api/listings/regenerate-titles`, { method: "POST" });
+      if (!r.ok) throw new Error("Server error");
+      const d = await r.json().catch(() => ({}));
+      toast({
+        title: "Regeneration started",
+        description: `Updating titles and descriptions for ${d.total ?? "all"} listings in the background. This may take up to a minute.`,
+      });
+      // Dismiss the notice once they've run it
+      localStorage.setItem("descriptionUpdateNoticeDismissed", "true");
+      setRegenerateDismissed(true);
+    } catch {
+      toast({
+        title: "Regeneration failed",
+        description: "Could not connect to the server. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  const handleDismissNotice = () => {
+    localStorage.setItem("descriptionUpdateNoticeDismissed", "true");
+    setRegenerateDismissed(true);
   };
 
   return (
@@ -29,6 +65,39 @@ export default function SettingsPage() {
           <p className="text-muted-foreground mt-1">Manage app preferences and external connections.</p>
         </div>
 
+        {/* Update notice banner */}
+        {!regenerateDismissed && (
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-sm p-4">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900">Description format updated</p>
+              <p className="text-sm text-amber-800 mt-0.5">
+                Listing descriptions now use rich HTML formatting for better presentation on eBay.
+                Your existing listings still store the old plain-text descriptions — run{" "}
+                <span className="font-semibold">Regenerate Titles &amp; Descriptions</span> below
+                to apply the new format before your next CSV export.
+              </p>
+              <div className="flex items-center gap-3 mt-3">
+                <button
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-amber-600 text-white px-3 py-1.5 rounded-sm hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Regenerate Now
+                </button>
+                <button
+                  onClick={handleDismissNotice}
+                  className="text-xs text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* eBay Integration */}
         <div className="cockpit-panel">
           <div className="cockpit-header flex items-center gap-2">
             <ShoppingBag className="w-4 h-4" />
@@ -94,6 +163,40 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Listing Maintenance */}
+        <div className="cockpit-panel">
+          <div className="cockpit-header flex items-center gap-2">
+            <Wrench className="w-4 h-4" />
+            Listing Maintenance
+          </div>
+          <div className="p-6 flex flex-col gap-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <h3 className="font-display font-bold text-base">Regenerate Titles &amp; Descriptions</h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-lg">
+                  Re-generates titles and descriptions for every listing using the latest templates.
+                  Run this after a description format update so your next Revise CSV export picks up
+                  the new content. The operation runs in the background and typically completes within
+                  a minute.
+                </p>
+              </div>
+            </div>
+            <div className="border-t border-border pt-4 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Existing eBay listings are not changed until you upload a Revise CSV.
+              </p>
+              <button
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground border border-border px-4 py-2 rounded-sm hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                {regenerating ? "Starting…" : "Regenerate Titles & Descriptions"}
+              </button>
+            </div>
           </div>
         </div>
 
