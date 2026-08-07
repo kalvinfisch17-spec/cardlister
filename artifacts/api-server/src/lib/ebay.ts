@@ -277,33 +277,36 @@ export function generateDescription(card: {
       ? qualityDescriptions[card.quality]
       : card.quality ?? "See photos";
 
-  return `
-${card.cardName ?? "Pokemon Card"}${card.setName ? ` — ${card.setName}` : ""}
+  const titleLine = [
+    "Pokémon TCG",
+    card.cardNumber ? `#${card.cardNumber}` : null,
+    card.cardName ?? null,
+  ].filter(Boolean).join(" – ");
 
-Card Details:
-- Name: ${card.cardName ?? "Unknown"}
+  return `
+${titleLine}
+
+- Card: ${card.cardName ?? "Unknown"}
 - Set: ${card.setName ?? "Unknown"}
-- Card Number: ${card.cardNumber ? `#${card.cardNumber}` : "Unknown"}
-- Year: ${card.year ?? "Unknown"}
-- Rarity: ${card.rarity ?? "Unknown"}
+- Card #: ${card.cardNumber ? `#${card.cardNumber}` : "Unknown"}
+- Rarity / Finish: ${card.rarity ?? card.holoType === "holo" ? "Holo" : card.holoType === "reverse_holo" ? "Reverse Holo" : card.rarity ?? ""}
 - Language: ${card.language ?? "English"}
 - Condition: ${qualityDesc}
 ${card.notes ? `\nNotes: ${card.notes}` : ""}
 
-Condition Guide:
-Near Mint (NM) = no visible wear. Lightly Played (LP) = minor whitening/surface marks, light edge wear, no creases unless noted.
+Condition guide: Very Good = light play (minor whitening/surface marks, light edge wear, no creases unless noted).
 
-Photos:
+Photos
 Exact card pictured (front & back).
 
-Shipping:
+Shipping
 - Under $20: PWE (no tracking), penny sleeve + top loader.
 - $20+: Bubble mailer with USPS tracking.
 - Combined shipping: Yes.
 
-Returns & Support:
+Returns & Support
 - All sales final (no returns) for buyer's remorse.
-- Issues with the order? Message me — happy to help.
+- Issues with the order? Message me—happy to help.
 
 Thanks for looking!
   `.trim();
