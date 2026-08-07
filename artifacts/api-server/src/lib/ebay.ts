@@ -278,8 +278,7 @@ export function generateDescription(card: {
       : card.quality ?? "See photos";
 
   return `
-${card.cardName ?? "Pokemon Card"}
-${card.holoType ? `Type: ${holoLabel}` : ""}
+${card.cardName ?? "Pokemon Card"}${card.setName ? ` — ${card.setName}` : ""}
 
 Card Details:
 - Name: ${card.cardName ?? "Unknown"}
@@ -289,13 +288,23 @@ Card Details:
 - Rarity: ${card.rarity ?? "Unknown"}
 - Language: ${card.language ?? "English"}
 - Condition: ${qualityDesc}
+${card.notes ? `\nNotes: ${card.notes}` : ""}
 
-${card.notes ? `Additional Notes:\n${card.notes}` : ""}
+Condition Guide:
+Near Mint (NM) = no visible wear. Lightly Played (LP) = minor whitening/surface marks, light edge wear, no creases unless noted.
 
-Please see all photos for accurate representation of card condition.
-All cards are shipped in a protective sleeve and top loader.
+Photos:
+Exact card pictured (front & back).
 
-Payment via PayPal or eBay accepted checkout methods.
-Ships within 1 business day.
+Shipping:
+- Under $20: PWE (no tracking), penny sleeve + top loader.
+- $20+: Bubble mailer with USPS tracking.
+- Combined shipping: Yes.
+
+Returns & Support:
+- All sales final (no returns) for buyer's remorse.
+- Issues with the order? Message me — happy to help.
+
+Thanks for looking!
   `.trim();
 }
