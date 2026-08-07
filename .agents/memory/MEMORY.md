@@ -1,2 +1,7 @@
 - [CardLister zod.int() codegen fix](cardlister-codegen.md) — orval v8 generates zod.int() but workspace uses zod v3; must sed-replace after every codegen run.
 - [eBay routes prefix pattern](ebay-routes.md) — eBay router mounted at /ebay in index.ts; route handlers inside must NOT repeat the /ebay prefix.
+- [Windows local dev setup](windows-local-dev.md) — critical env/package quirks for running on Windows with pnpm v11.
+- [PostgreSQL 18 CREATE TYPE](pg18-create-type.md) — CREATE TYPE does not support IF NOT EXISTS; use DO $$ BEGIN … EXCEPTION WHEN duplicate_object THEN NULL; END $$ blocks.
+- [Drizzle raw SQL fallback](drizzle-raw-sql.md) — Drizzle ORM parameter binding generates malformed SQL ($6 duplicated) for certain tables on some versions; use pool.query() raw SQL as fallback.
+- [Local dev DATABASE_URL](local-dev-env.md) — user's local API server reads ../../.env; must contain DATABASE_URL=postgresql://postgres:PASSWORD@localhost:5432/cardlister.
+- [setup-db.sql task agent gap](setup-db-task-agent-gap.md) — task agents add DB schema files but often forget to update setup-db.sql; always check after merges.
