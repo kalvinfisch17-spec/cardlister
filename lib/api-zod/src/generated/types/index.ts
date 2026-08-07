@@ -27,9 +27,10 @@ export * from './cardUpdateStatus';
 export * from './ebayAuthUrl';
 export * from './ebayCallbackParams';
 export * from './ebayStatus';
+export * from './getCardDescriptionPreview200';
 export * from './getImportProgress200';
 export * from './healthStatus';
-export * from './importEbayCsvBody';
+// ImportEbayCsvBody is exported as a zod schema value from ../api; omit type re-export to avoid TS2308
 export * from './listCardsHoloType';
 export * from './listCardsParams';
 export * from './listCardsStatus';

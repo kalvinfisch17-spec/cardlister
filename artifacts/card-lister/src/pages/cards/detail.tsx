@@ -6,9 +6,10 @@ import {
   useUpdateCard, 
   useGetCardPricing, 
   useCreateListing,
-  useAnalyzeCard
+  useAnalyzeCard,
+  useGetCardDescriptionPreview
 } from "@workspace/api-client-react";
-import { ArrowLeft, ExternalLink, Sparkles, Loader2, Save, Tag, CheckCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Sparkles, Loader2, Save, Tag, CheckCircle, AlertTriangle, Eye, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CardDetailPage() {
@@ -31,6 +32,11 @@ export default function CardDetailPage() {
 
   const [formData, setFormData] = useState<any>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const { data: descriptionPreview, isLoading: previewLoading } = useGetCardDescriptionPreview(id, {
+    query: { enabled: showPreview && !!id, queryKey: ["description-preview", id] }
+  });
 
   useEffect(() => {
     if (card) {
@@ -144,6 +150,13 @@ export default function CardDetailPage() {
               </button>
             ) : (
               <>
+                <button
+                  onClick={() => setShowPreview(true)}
+                  className="bg-white text-foreground border border-border px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview Description
+                </button>
                 <button 
                   onClick={() => setIsEditing(true)}
                   className="bg-white text-foreground border border-border px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-slate-50 transition-colors"
@@ -396,6 +409,69 @@ export default function CardDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Description Preview Modal */}
+      {showPreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPreview(false); }}
+        >
+          <div className="bg-background border border-border rounded-sm shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+              <div>
+                <h2 className="text-base font-display font-extrabold tracking-tight">eBay Description Preview</h2>
+                {descriptionPreview?.title && (
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5 truncate max-w-md">
+                    Title: {descriptionPreview.title}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="p-1.5 rounded-sm hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                aria-label="Close preview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="overflow-y-auto flex-1 p-5">
+              {previewLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : descriptionPreview?.html ? (
+                <div
+                  className="ebay-preview text-sm leading-relaxed text-foreground"
+                  style={{
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                  }}
+                  dangerouslySetInnerHTML={{ __html: descriptionPreview.html }}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-16">
+                  No description available.
+                </div>
+              )}
+            </div>
+
+            {/* Modal footer */}
+            <div className="px-5 py-3 border-t border-border shrink-0 flex items-center justify-between bg-muted/30">
+              <p className="text-xs text-muted-foreground font-mono">
+                This preview approximates how eBay renders your HTML description.
+              </p>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="text-xs font-semibold px-3 py-1.5 bg-primary text-primary-foreground rounded-sm hover:bg-primary/90 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Shell>
   );
 }

@@ -145,4 +145,22 @@
   .data-value {
     @apply font-mono font-medium tracking-tight;
   }
+
+  /* eBay description preview — mirrors eBay's basic rendering */
+  .ebay-preview b,
+  .ebay-preview strong {
+    font-weight: 700;
+  }
+  .ebay-preview ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  .ebay-preview li {
+    margin: 0.2rem 0;
+    line-height: 1.6;
+  }
+  .ebay-preview p {
+    margin: 0.4rem 0;
+  }
 }

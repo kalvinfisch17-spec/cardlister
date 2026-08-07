@@ -16,6 +16,7 @@ import {
 } from "@workspace/api-zod";
 import { analyzeCardImage } from "../lib/cardAnalysis";
 import { fetchSuggestedPrice, EBAY_FVF_RATE, SHIPPING_COST } from "../lib/pricing";
+import { generateDescription, generateTitle } from "../lib/ebay";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -392,6 +393,32 @@ router.delete("/cards/:id", async (req, res) => {
   }
 });
 
+// GET /cards/:id/description-preview
+router.get("/cards/:id/description-preview", async (req, res) => {
+  const parsed = GetCardParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid params" });
+    return;
+  }
+  try {
+    const [card] = await db
+      .select()
+      .from(cardsTable)
+      .where(eq(cardsTable.id, parsed.data.id))
+      .limit(1);
+    if (!card) {
+      res.status(404).json({ error: "Card not found" });
+      return;
+    }
+    const html = generateDescription(card);
+    const title = generateTitle(card);
+    res.json({ html, title });
+  } catch (err) {
+    req.log.error({ err }, "Failed to generate description preview");
+    res.status(500).json({ error: "Failed to generate description preview" });
+  }
+});
+
 // GET /cards/:id/pricing
 router.get("/cards/:id/pricing", async (req, res) => {
   const parsed = GetCardPricingParams.safeParse(req.params);
@@ -513,37 +540,10 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       return 3000; // default: Very Good
     };
 
-    const holoLabel = (holoType: string | null): string => {
-      if (holoType === "holo") return "Holo";
-      if (holoType === "reverse_holo") return "Reverse Holo";
-      return "";
-    };
-
-    const makeTitle = (card: typeof cards[0]): string => {
-      const parts = [
-        card.cardName,
-        card.setName,
-        card.cardNumber ? `#${card.cardNumber}` : null,
-        holoLabel(card.holoType),
-        "Pokemon Card",
-        card.quality,
-      ].filter(Boolean).join(" ");
-      return parts.slice(0, 80); // eBay title limit
-    };
-
-    const makeDescription = (card: typeof cards[0]): string => {
-      return [
-        `<b>${card.cardName}</b>`,
-        card.setName ? `Set: ${card.setName}` : null,
-        card.cardNumber ? `Card Number: #${card.cardNumber}` : null,
-        card.year ? `Year: ${card.year}` : null,
-        card.rarity ? `Rarity: ${card.rarity}` : null,
-        card.holoType ? `Foil: ${holoLabel(card.holoType) || "Standard"}` : null,
-        card.quality ? `Condition: ${card.quality}` : null,
-        card.language ? `Language: ${card.language}` : null,
-        `<br>Listed by FischTCG. Fast shipping, tracked via USPS.`,
-      ].filter(Boolean).join("<br>");
-    };
+    // Use the canonical generators so "Export to eBay CSV" and "Preview Description"
+    // always produce identical output.
+    const makeTitle = generateTitle;
+    const makeDescription = generateDescription;
 
     // eBay File Exchange header — the action column encodes metadata
     const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";

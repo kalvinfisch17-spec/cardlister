@@ -6,8 +6,8 @@ import { Link } from "wouter";
 
 interface CardPair {
   id: string;
-  front: { file: File; base64: string };
-  back: { file: File; base64: string } | null;
+  front: { file: File; base64: string; id: string };
+  back: { file: File; base64: string; id: string } | null;
 }
 
 function buildPairs(files: { file: File; base64: string; id: string }[]): CardPair[] {

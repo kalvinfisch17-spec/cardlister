@@ -32,6 +32,7 @@ import type {
   EbayAuthUrl,
   EbayCallbackParams,
   EbayStatus,
+  GetCardDescriptionPreview200,
   GetImportProgress200,
   HealthStatus,
   ImportEbayCsvBody,
@@ -820,6 +821,83 @@ export const useDeleteCard = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteCardMutationOptions(options));
     }
+
+export const getGetCardDescriptionPreviewUrl = (id: number,) => {
+
+
+
+
+  return `/api/cards/${id}/description-preview`
+}
+
+/**
+ * @summary Generate and return the eBay HTML description for a card
+ */
+export const getCardDescriptionPreview = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<GetCardDescriptionPreview200> => {
+
+  return customFetch<GetCardDescriptionPreview200>(getGetCardDescriptionPreviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCardDescriptionPreviewQueryKey = (id: number,) => {
+    return [
+    `/api/cards/${id}/description-preview`
+    ] as const;
+    }
+
+
+export const getGetCardDescriptionPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getCardDescriptionPreview>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCardDescriptionPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCardDescriptionPreviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCardDescriptionPreview>>> = ({ signal }) => getCardDescriptionPreview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCardDescriptionPreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCardDescriptionPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getCardDescriptionPreview>>>
+export type GetCardDescriptionPreviewQueryError = ErrorType<void>
+
+
+/**
+ * @summary Generate and return the eBay HTML description for a card
+ */
+
+export function useGetCardDescriptionPreview<TData = Awaited<ReturnType<typeof getCardDescriptionPreview>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCardDescriptionPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCardDescriptionPreviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetCardPricingUrl = (id: number,) => {
 

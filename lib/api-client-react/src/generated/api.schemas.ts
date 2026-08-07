@@ -308,6 +308,13 @@ export const ListCardsHoloType = {
   reverse_holo: 'reverse_holo',
 } as const;
 
+export type GetCardDescriptionPreview200 = {
+  /** The rendered HTML description */
+  html: string;
+  /** The generated eBay listing title */
+  title: string;
+};
+
 export type RepriceAllCardsParams = {
 reviewOnly?: boolean;
 };

@@ -205,6 +205,35 @@ paths:
         "204":
           description: Deleted
 
+  /cards/{id}/description-preview:
+    get:
+      operationId: getCardDescriptionPreview
+      tags: [cards]
+      summary: Generate and return the eBay HTML description for a card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generated HTML description
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [html, title]
+                properties:
+                  html:
+                    type: string
+                    description: The rendered HTML description
+                  title:
+                    type: string
+                    description: The generated eBay listing title
+        "404":
+          description: Card not found
+
   /cards/{id}/pricing:
     get:
       operationId: getCardPricing

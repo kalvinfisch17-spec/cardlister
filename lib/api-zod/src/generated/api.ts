@@ -257,6 +257,19 @@ export const DeleteCardResponse = zod.void()
 
 
 /**
+ * @summary Generate and return the eBay HTML description for a card
+ */
+export const GetCardDescriptionPreviewParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetCardDescriptionPreviewResponse = zod.object({
+  "html": zod.string().describe('The rendered HTML description'),
+  "title": zod.string().describe('The generated eBay listing title')
+})
+
+
+/**
  * @summary Get eBay recently sold pricing for a card
  */
 export const GetCardPricingParams = zod.object({
