@@ -668,6 +668,54 @@ router.post("/listings/import/ebay-csv", async (req, res) => {
   })();
 });
 
+// POST /listings/regenerate-titles
+// Re-generates titles and descriptions for all listings from their card data
+router.post("/listings/regenerate-titles", async (req, res) => {
+  try {
+    const listings = await db
+      .select({
+        id: listingsTable.id,
+        card: {
+          cardName: cardsTable.cardName,
+          setName: cardsTable.setName,
+          cardNumber: cardsTable.cardNumber,
+          year: cardsTable.year,
+          holoType: cardsTable.holoType,
+          quality: cardsTable.quality,
+          language: cardsTable.language,
+          rarity: cardsTable.rarity,
+          notes: cardsTable.notes,
+        },
+      })
+      .from(listingsTable)
+      .innerJoin(cardsTable, eq(listingsTable.cardId, cardsTable.id));
+
+    res.json({ started: true, total: listings.length });
+
+    // Regenerate in background
+    (async () => {
+      const CONCURRENCY = 10;
+      for (let i = 0; i < listings.length; i += CONCURRENCY) {
+        const batch = listings.slice(i, i + CONCURRENCY);
+        await Promise.all(batch.map(async (l) => {
+          try {
+            const newTitle = generateTitle(l.card);
+            const newDescription = generateDescription(l.card);
+            await db.update(listingsTable).set({
+              title: newTitle,
+              description: newDescription,
+              updatedAt: new Date(),
+            }).where(eq(listingsTable.id, l.id));
+          } catch { /* skip on error */ }
+        }));
+      }
+    })();
+  } catch (err) {
+    req.log.error({ err }, "Failed to regenerate titles");
+    res.status(500).json({ error: "Failed to regenerate titles" });
+  }
+});
+
 // GET /listings/import/:jobId/progress
 router.get("/listings/import/:jobId/progress", async (req, res) => {
   const { jobId } = req.params;

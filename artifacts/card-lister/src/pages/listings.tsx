@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Shell } from "@/components/layout/shell";
 import { useListListings, useDeleteListing } from "@workspace/api-client-react";
-import { Search, ExternalLink, Activity, Filter, Trash2, Loader2, Download } from "lucide-react";
+import { Search, ExternalLink, Activity, Filter, Trash2, Loader2, Download, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ListingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [regenerating, setRegenerating] = useState(false);
   
   const { data: listings, isLoading, refetch } = useListListings({}, { query: { queryKey: ["listings"] } });
   const deleteListing = useDeleteListing();
@@ -68,6 +69,23 @@ export default function ListingsPage() {
               <Activity className="w-4 h-4" />
               {filteredListings.length} results
             </div>
+            <button
+              onClick={async () => {
+                setRegenerating(true);
+                const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+                try {
+                  const r = await fetch(`${base}/api/listings/regenerate-titles`, { method: "POST" });
+                  const d = await r.json().catch(() => ({}));
+                  alert(`Regenerating titles for ${d.total ?? "all"} listings in the background. Refresh in ~30 seconds.`);
+                } catch { alert("Could not connect to server."); }
+                finally { setRegenerating(false); }
+              }}
+              disabled={regenerating}
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300 border border-slate-600 px-3 py-1.5 rounded-sm hover:bg-slate-800 hover:border-slate-500 transition-colors disabled:opacity-50"
+            >
+              {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Regenerate Titles
+            </button>
             <button
               onClick={() => {
                 const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
