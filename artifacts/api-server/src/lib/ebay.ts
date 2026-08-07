@@ -246,6 +246,36 @@ export function generateTitle(card: {
   return parts.join(" ").substring(0, 80);
 }
 
+/**
+ * Escape a string for safe inclusion in HTML content.
+ * Covers the five standard XML/HTML entities.
+ */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Strip HTML tags from a string for plain-text display in internal UI.
+ */
+export function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
 export function generateDescription(card: {
   cardName?: string | null;
   setName?: string | null;
@@ -257,57 +287,71 @@ export function generateDescription(card: {
   rarity?: string | null;
   notes?: string | null;
 }): string {
-  const holoLabel =
-    card.holoType === "holo"
-      ? "Holo"
-      : card.holoType === "reverse_holo"
-        ? "Reverse Holo"
-        : "Standard (Non-Holo)";
-
   const qualityDescriptions: Record<string, string> = {
-    NM: "Near Mint — card shows minimal to no play wear",
-    LP: "Lightly Played — minor surface scuffs or whitening",
-    MP: "Moderately Played — visible wear but still fully playable",
-    HP: "Heavily Played — significant wear",
-    D: "Damaged — major visible damage",
+    NM: "Near Mint \u2014 card shows minimal to no play wear",
+    LP: "Lightly Played \u2014 minor surface scuffs or whitening",
+    MP: "Moderately Played \u2014 visible wear but still fully playable",
+    HP: "Heavily Played \u2014 significant wear",
+    D: "Damaged \u2014 major visible damage",
   };
+
+  // All dynamic values are escaped before interpolation into HTML
+  const e = escapeHtml;
 
   const qualityDesc =
     card.quality && qualityDescriptions[card.quality]
-      ? qualityDescriptions[card.quality]
-      : card.quality ?? "See photos";
+      ? qualityDescriptions[card.quality]          // static strings — no escaping needed
+      : e(card.quality ?? "See photos");
+
+  const rarityFinish =
+    card.rarity
+      ? e(card.rarity)
+      : card.holoType === "holo"
+        ? "Holo"
+        : card.holoType === "reverse_holo"
+          ? "Reverse Holo"
+          : "Standard (Non-Holo)";
 
   const titleLine = [
-    "Pokémon TCG",
-    card.cardNumber ? `#${card.cardNumber}` : null,
-    card.cardName ?? null,
-  ].filter(Boolean).join(" – ");
+    "Pok\u00e9mon TCG",
+    card.cardNumber ? `#${e(card.cardNumber)}` : null,
+    card.cardName ? e(card.cardName) : null,
+  ]
+    .filter(Boolean)
+    .join(" \u2013 ");
 
-  return `
-${titleLine}
+  const notesLine = card.notes
+    ? `\n<li><strong>Notes:</strong> ${e(card.notes)}</li>`
+    : "";
 
-- Card: ${card.cardName ?? "Unknown"}
-- Set: ${card.setName ?? "Unknown"}
-- Card #: ${card.cardNumber ? `#${card.cardNumber}` : "Unknown"}
-- Rarity / Finish: ${card.rarity ?? card.holoType === "holo" ? "Holo" : card.holoType === "reverse_holo" ? "Reverse Holo" : card.rarity ?? ""}
-- Language: ${card.language ?? "English"}
-- Condition: ${qualityDesc}
-${card.notes ? `\nNotes: ${card.notes}` : ""}
+  return `<b>${titleLine}</b>
+
+<ul>
+<li><strong>Card:</strong> ${card.cardName ? e(card.cardName) : "Unknown"}</li>
+<li><strong>Set:</strong> ${card.setName ? e(card.setName) : "Unknown"}</li>
+<li><strong>Card #:</strong> ${card.cardNumber ? `#${e(card.cardNumber)}` : "Unknown"}</li>
+<li><strong>Rarity / Finish:</strong> ${rarityFinish}</li>
+<li><strong>Language:</strong> ${card.language ? e(card.language) : "English"}</li>
+<li><strong>Condition:</strong> ${qualityDesc}</li>${notesLine}
+</ul>
 
 Condition guide: Very Good = light play (minor whitening/surface marks, light edge wear, no creases unless noted).
 
-Photos
-Exact card pictured (front & back).
+<strong>Photos</strong>
+<p>Exact card pictured (front &amp; back).</p>
 
-Shipping
-- Under $20: PWE (no tracking), penny sleeve + top loader.
-- $20+: Bubble mailer with USPS tracking.
-- Combined shipping: Yes.
+<strong>Shipping</strong>
+<ul>
+<li>Under $20: PWE (no tracking), penny sleeve + top loader.</li>
+<li>$20+: Bubble mailer with USPS tracking.</li>
+<li>Combined shipping: Yes.</li>
+</ul>
 
-Returns & Support
-- All sales final (no returns) for buyer's remorse.
-- Issues with the order? Message me—happy to help.
+<strong>Returns &amp; Support</strong>
+<ul>
+<li>All sales final (no returns) for buyer\u2019s remorse.</li>
+<li>Issues with the order? Message me \u2014 happy to help.</li>
+</ul>
 
-Thanks for looking!
-  `.trim();
+Thanks for looking!`.trim();
 }
