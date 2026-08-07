@@ -308,6 +308,15 @@ export const ListCardsHoloType = {
   reverse_holo: 'reverse_holo',
 } as const;
 
+export type RepriceAllCardsParams = {
+reviewOnly?: boolean;
+};
+
+export type RepriceAllCards200 = {
+  started: boolean;
+  total: number;
+};
+
 export type ImportEbayCsvBody = {
   csvContent: string;
 };

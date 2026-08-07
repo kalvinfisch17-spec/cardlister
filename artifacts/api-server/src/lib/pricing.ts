@@ -1,9 +1,14 @@
-import { searchSoldListings } from "./ebay";
+import { fetchTcgMarketPrice } from "./pokemonPricing";
 
 export const EBAY_FVF_RATE = 0.1325;  // 13.25% final value fee
 export const EBAY_ORDER_FEE = 0.30;   // per-order fee
 export const SHIPPING_COST = 0.78;    // seller's shipping cost
 export const MIN_PROFIT = 0.01;       // guaranteed minimum profit
+
+// Break-even floor: the minimum list price that covers all costs + min profit
+export const BREAK_EVEN = Math.ceil(
+  ((EBAY_ORDER_FEE + SHIPPING_COST + MIN_PROFIT) / (1 - EBAY_FVF_RATE)) * 100,
+) / 100;
 
 export function buildPricingQuery(card: {
   cardName?: string | null;
@@ -21,6 +26,13 @@ export function buildPricingQuery(card: {
   return parts.join(" ");
 }
 
+/**
+ * Fetch the TCGPlayer market price for a card and apply eBay fees + shipping
+ * so the suggested list price nets the seller approximately the market rate.
+ *
+ * Formula: listPrice = (marketPrice + orderFee + shippingCost + minProfit) / (1 - fvfRate)
+ * Floored at BREAK_EVEN so no sale ever loses money.
+ */
 export async function fetchSuggestedPrice(card: {
   cardName?: string | null;
   setName?: string | null;
@@ -33,23 +45,21 @@ export async function fetchSuggestedPrice(card: {
   highestPrice: number | null;
   soldCount: number;
 }> {
-  const query = buildPricingQuery(card);
-  const soldListings = await searchSoldListings(query);
-  const prices = soldListings.map((l) => l.price).filter((p) => p > 0);
+  const { marketPrice } = await fetchTcgMarketPrice(card);
 
-  if (prices.length === 0) {
+  if (marketPrice === null || marketPrice <= 0) {
     return { suggestedPrice: null, averagePrice: null, lowestPrice: null, highestPrice: null, soldCount: 0 };
   }
 
-  const averagePrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-  const lowestPrice = Math.min(...prices);
-  const highestPrice = Math.max(...prices);
+  // Apply fees formula
+  const rawListPrice = (marketPrice + EBAY_ORDER_FEE + SHIPPING_COST + MIN_PROFIT) / (1 - EBAY_FVF_RATE);
+  const suggestedPrice = Math.max(Math.round(rawListPrice * 100) / 100, BREAK_EVEN);
 
-  // Floor at break-even + min profit so no sale ever loses money
-  const breakEven = Math.ceil(
-    ((EBAY_ORDER_FEE + SHIPPING_COST + MIN_PROFIT) / (1 - EBAY_FVF_RATE)) * 100,
-  ) / 100;
-  const suggestedPrice = Math.max(Math.round(averagePrice * 100) / 100, breakEven);
-
-  return { suggestedPrice, averagePrice, lowestPrice, highestPrice, soldCount: prices.length };
+  return {
+    suggestedPrice,
+    averagePrice: marketPrice,   // TCGPlayer market IS the "average"
+    lowestPrice: marketPrice,
+    highestPrice: marketPrice,
+    soldCount: 1,                // 1 source (TCGPlayer market)
+  };
 }

@@ -40,7 +40,9 @@ import type {
   Listing,
   ListingInput,
   ListingStats,
-  PricingData
+  PricingData,
+  RepriceAllCards200,
+  RepriceAllCardsParams
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -895,6 +897,84 @@ export function useGetCardPricing<TData = Awaited<ReturnType<typeof getCardPrici
 
 
 
+
+export const getRepriceAllCardsUrl = (params?: RepriceAllCardsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/cards/reprice-all?${stringifiedParams}` : `/api/cards/reprice-all`
+}
+
+/**
+ * @summary Re-price all cards (or only flagged ones) using TCGPlayer market data
+ */
+export const repriceAllCards = async (params?: RepriceAllCardsParams, options?: Parameters<typeof customFetch>[1]): Promise<RepriceAllCards200> => {
+
+  return customFetch<RepriceAllCards200>(getRepriceAllCardsUrl(params),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRepriceAllCardsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof repriceAllCards>>, TError,{params?: RepriceAllCardsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof repriceAllCards>>, TError,{params?: RepriceAllCardsParams}, TContext> => {
+
+const mutationKey = ['repriceAllCards'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof repriceAllCards>>, {params?: RepriceAllCardsParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  repriceAllCards(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RepriceAllCardsMutationResult = NonNullable<Awaited<ReturnType<typeof repriceAllCards>>>
+
+    export type RepriceAllCardsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Re-price all cards (or only flagged ones) using TCGPlayer market data
+ */
+export const useRepriceAllCards = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof repriceAllCards>>, TError,{params?: RepriceAllCardsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof repriceAllCards>>,
+        TError,
+        {params?: RepriceAllCardsParams},
+        TContext
+      > => {
+      return useMutation(getRepriceAllCardsMutationOptions(options));
+    }
 
 export const getImportEbayCsvUrl = () => {
 

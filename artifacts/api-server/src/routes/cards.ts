@@ -436,6 +436,52 @@ router.get("/cards/:id/pricing", async (req, res) => {
   }
 });
 
+// POST /cards/reprice-all
+// Re-prices all cards (or just needsPriceReview=true) using TCGPlayer market data
+router.post("/cards/reprice-all", async (req, res) => {
+  const reviewOnly = req.query.reviewOnly !== "false";
+  try {
+    const where = reviewOnly
+      ? and(eq(cardsTable.needsPriceReview, true))
+      : undefined;
+
+    const cards = await db
+      .select({ id: cardsTable.id, cardName: cardsTable.cardName, setName: cardsTable.setName, cardNumber: cardsTable.cardNumber, holoType: cardsTable.holoType })
+      .from(cardsTable)
+      .where(where);
+
+    res.json({ started: true, total: cards.length });
+
+    // Background re-pricing with concurrency 5
+    (async () => {
+      const CONCURRENCY = 5;
+      for (let i = 0; i < cards.length; i += CONCURRENCY) {
+        const batch = cards.slice(i, i + CONCURRENCY);
+        await Promise.all(batch.map(async (card) => {
+          try {
+            const pricing = await fetchSuggestedPrice(card);
+            if (pricing.suggestedPrice !== null) {
+              await db.update(cardsTable).set({
+                suggestedPrice: pricing.suggestedPrice,
+                needsPriceReview: false,
+                updatedAt: new Date(),
+              }).where(eq(cardsTable.id, card.id));
+              // Also update listing price
+              await db.update(listingsTable).set({
+                price: pricing.suggestedPrice,
+                updatedAt: new Date(),
+              }).where(eq(listingsTable.cardId, card.id));
+            }
+          } catch { /* skip card on error */ }
+        }));
+      }
+    })();
+  } catch (err) {
+    req.log.error({ err }, "Failed to start reprice-all");
+    res.status(500).json({ error: "Failed to start repricing" });
+  }
+});
+
 // GET /cards/export/ebay-csv
 // Generates an eBay File Exchange CSV ready to upload to Seller Hub
 router.get("/cards/export/ebay-csv", async (req, res) => {

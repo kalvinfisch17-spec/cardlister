@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Shell } from "@/components/layout/shell";
 import { Link, useSearch } from "wouter";
 import { useListCards, useDeleteCard, useBulkCreateListings } from "@workspace/api-client-react";
-import { Search, Filter, Trash2, Tag, Loader2, Download, AlertCircle } from "lucide-react";
+import { Search, Filter, Trash2, Tag, Loader2, Download, AlertCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CardsPage() {
@@ -62,6 +62,29 @@ export default function CardsPage() {
     }
   };
 
+  const [repricing, setRepricing] = useState(false);
+
+  const handleRepriceAll = async () => {
+    setRepricing(true);
+    try {
+      const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+      const res = await fetch(`${base}/api/cards/reprice-all?reviewOnly=false`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ title: "Reprice failed", description: data.error ?? "Server error", variant: "destructive" });
+      } else {
+        toast({
+          title: "Re-pricing started",
+          description: `Fetching TCGPlayer prices for ${data.total} cards in the background. Refresh in a minute.`,
+        });
+      }
+    } catch {
+      toast({ title: "Reprice failed", description: "Could not connect to the server.", variant: "destructive" });
+    } finally {
+      setRepricing(false);
+    }
+  };
+
   const handleExportCsv = async () => {
     try {
       const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -106,6 +129,14 @@ export default function CardsPage() {
           </div>
           
           <div className="flex gap-2">
+            <button
+              onClick={handleRepriceAll}
+              disabled={repricing}
+              className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {repricing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Re-price All
+            </button>
             <button
               onClick={handleExportCsv}
               className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-sm text-sm font-semibold shadow-sm hover:bg-secondary/90 transition-colors cursor-pointer"

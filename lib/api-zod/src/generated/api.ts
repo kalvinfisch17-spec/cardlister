@@ -279,6 +279,21 @@ export const GetCardPricingResponse = zod.object({
 
 
 /**
+ * @summary Re-price all cards (or only flagged ones) using TCGPlayer market data
+ */
+export const repriceAllCardsQueryReviewOnlyDefault = true;
+
+export const RepriceAllCardsQueryParams = zod.object({
+  "reviewOnly": zod.coerce.boolean().default(repriceAllCardsQueryReviewOnlyDefault)
+})
+
+export const RepriceAllCardsResponse = zod.object({
+  "started": zod.boolean(),
+  "total": zod.number().int()
+})
+
+
+/**
  * @summary Import existing eBay listings from a Seller Hub CSV export
  */
 export const ImportEbayCsvBody = zod.object({
