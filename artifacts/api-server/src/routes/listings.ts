@@ -775,28 +775,48 @@ router.get("/listings/export/ebay-csv-revise", async (req, res) => {
       return;
     }
 
-    // eBay File Exchange Revise format
-    const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";
+    // eBay Seller Hub "edit price & quantity" revise format
+    const INFO_LINE = "#INFO,Version=1.0.0,Template= eBay-active-revise-price-quantity-download_US";
     const columns = [
-      ACTION_HEADER,
-      "ItemID",
-      "*Title",
-      "StartPrice",
-      "Description",
+      "Action",
+      "Category name",
+      "Item number",
+      "Title",
+      "Listing site",
+      "Currency",
+      "Start price",
+      "Buy It Now price",
+      "Available quantity",
+      "Relationship",
+      "Relationship details",
+      "Custom label (SKU)",
     ];
 
-    const escape = (val: string | number | null | undefined): string =>
-      `"${String(val ?? "").replace(/"/g, '""')}"`;
+    const escape = (val: string | number | null | undefined): string => {
+      const s = String(val ?? "");
+      // Only quote if the value contains a comma, quote, or newline
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
 
     const rows = revisable.map((listing) => [
       "Revise",
+      "CCG Individual Cards (183454)",
       listing.ebayListingId!,
       (listing.title ?? "").slice(0, 80),
+      "US",
+      "USD",
       listing.price!.toFixed(2),
-      listing.description ?? "",
+      "",   // Buy It Now price
+      "1",  // Available quantity
+      "",   // Relationship
+      "",   // Relationship details
+      "",   // Custom label (SKU)
     ].map(escape).join(","));
 
-    const csv = [columns.map(escape).join(","), ...rows].join("\r\n");
+    const csv = [INFO_LINE, columns.join(","), ...rows].join("\r\n");
 
     const filename = `fischtcg-ebay-revise-${new Date().toISOString().slice(0, 10)}.csv`;
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
