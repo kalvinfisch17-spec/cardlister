@@ -58,6 +58,16 @@ function pickPrice(prices: NonNullable<NonNullable<TcgCard["tcgplayer"]>["prices
   );
 }
 
+/** Strip set code prefix from card names like "SV06: Twilight Masquerade Sandslash" → "Sandslash" */
+function cleanCardName(name: string): string {
+  return name.replace(/^[A-Z]{1,5}\d{1,3}[a-z]?:\s+\S+\s+\S+\s+/, "").trim();
+}
+
+/** Strip set code from set names like "SV06: Twilight Masquerade" → "Twilight Masquerade" */
+function cleanSetName(name: string): string {
+  return name.replace(/^[A-Z]{1,5}\d{1,3}[a-z]?:\s+/, "").trim();
+}
+
 export async function fetchTcgMarketPrice(card: {
   cardName?: string | null;
   setName?: string | null;
@@ -65,11 +75,15 @@ export async function fetchTcgMarketPrice(card: {
   holoType?: string | null;
 }): Promise<{ marketPrice: number | null; source: string }> {
   try {
+    // Clean names in case the DB still has the old set-prefixed format
+    const cardName = card.cardName ? cleanCardName(card.cardName) : null;
+    const setName = card.setName ? cleanSetName(card.setName) : null;
+
     // Build query — more specific = better match
     const parts: string[] = [];
-    if (card.cardName) parts.push(`name:"${card.cardName.replace(/"/g, "")}"`);
+    if (cardName) parts.push(`name:"${cardName.replace(/"/g, "")}"`);
     if (card.cardNumber) parts.push(`number:"${card.cardNumber.replace(/\/.*/g, "")}"`); // strip "/115" suffix
-    if (card.setName) parts.push(`set.name:"${card.setName.replace(/"/g, "")}"`);
+    if (setName) parts.push(`set.name:"${setName.replace(/"/g, "")}"`);
 
     if (parts.length === 0) return { marketPrice: null, source: "no search terms" };
 

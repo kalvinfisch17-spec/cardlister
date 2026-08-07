@@ -452,9 +452,11 @@ router.post("/cards/reprice-all", async (req, res) => {
 
     res.json({ started: true, total: cards.length });
 
-    // Background re-pricing with concurrency 5
+    // Background re-pricing: 3 concurrent, 1 s delay between batches
+    // Keeps requests under 60/min for the anonymous Pokemon TCG API tier
     (async () => {
-      const CONCURRENCY = 5;
+      const CONCURRENCY = 3;
+      const BATCH_DELAY_MS = 1000;
       for (let i = 0; i < cards.length; i += CONCURRENCY) {
         const batch = cards.slice(i, i + CONCURRENCY);
         await Promise.all(batch.map(async (card) => {
@@ -466,7 +468,6 @@ router.post("/cards/reprice-all", async (req, res) => {
                 needsPriceReview: false,
                 updatedAt: new Date(),
               }).where(eq(cardsTable.id, card.id));
-              // Also update listing price
               await db.update(listingsTable).set({
                 price: pricing.suggestedPrice,
                 updatedAt: new Date(),
@@ -474,6 +475,10 @@ router.post("/cards/reprice-all", async (req, res) => {
             }
           } catch { /* skip card on error */ }
         }));
+        // Rate-limit pause — 3 req/s stays well under 60/min anonymous limit
+        if (i + CONCURRENCY < cards.length) {
+          await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+        }
       }
     })();
   } catch (err) {
