@@ -1,10 +1,18 @@
 -- CardLister database setup
 -- Run with: psql -U postgres -d cardlister -f scripts/setup-db.sql
 
--- Enums
-CREATE TYPE IF NOT EXISTS holo_type AS ENUM ('standard', 'holo', 'reverse_holo');
-CREATE TYPE IF NOT EXISTS card_status AS ENUM ('pending', 'reviewed', 'listed');
-CREATE TYPE IF NOT EXISTS listing_status AS ENUM ('draft', 'active', 'sold', 'ended');
+-- Enums (IF NOT EXISTS is not supported for CREATE TYPE; use DO blocks instead)
+DO $$ BEGIN
+  CREATE TYPE holo_type AS ENUM ('standard', 'holo', 'reverse_holo');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE card_status AS ENUM ('pending', 'reviewed', 'listed');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE listing_status AS ENUM ('draft', 'active', 'sold', 'ended');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Cards table
 CREATE TABLE IF NOT EXISTS cards (
