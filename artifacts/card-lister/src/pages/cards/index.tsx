@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Shell } from "@/components/layout/shell";
 import { Link, useSearch } from "wouter";
 import { useListCards, useDeleteCard, useBulkCreateListings } from "@workspace/api-client-react";
-import { Search, Filter, Trash2, Tag, Loader2, Download, AlertCircle, RefreshCw } from "lucide-react";
+import { Search, Filter, Trash2, Tag, Loader2, Download, AlertCircle, RefreshCw, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CardsPage() {
@@ -130,6 +130,31 @@ export default function CardsPage() {
     }
   };
 
+  const [regeneratingTitles, setRegeneratingTitles] = useState(false);
+
+  const handleRegenerateTitles = async () => {
+    setRegeneratingTitles(true);
+    try {
+      const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+      const res = await fetch(`${base}/api/listings/regenerate-titles-selected`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardIds: Array.from(selectedIds) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ title: "Failed", description: data.error ?? "Server error", variant: "destructive" });
+      } else {
+        toast({ title: "Titles regenerated", description: `Updated titles for ${data.total} listing${data.total === 1 ? "" : "s"}.` });
+        setSelectedIds(new Set());
+      }
+    } catch {
+      toast({ title: "Failed", description: "Could not connect to the server.", variant: "destructive" });
+    } finally {
+      setRegeneratingTitles(false);
+    }
+  };
+
   const handleBulkList = () => {
     bulkCreate.mutate({
       data: { cardIds: Array.from(selectedIds) }
@@ -224,6 +249,14 @@ export default function CardsPage() {
               >
                 {repricing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                 Re-price
+              </button>
+              <button
+                onClick={handleRegenerateTitles}
+                disabled={regeneratingTitles}
+                className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-3 py-1 text-xs font-semibold rounded-sm shadow-sm hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {regeneratingTitles ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
+                Regen Titles
               </button>
               <button 
                 onClick={handleBulkList}

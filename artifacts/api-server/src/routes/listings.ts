@@ -718,6 +718,53 @@ router.post("/listings/regenerate-titles", async (req, res) => {
   }
 });
 
+// POST /listings/regenerate-titles-selected
+// Re-generates titles and descriptions for listings belonging to specific card IDs
+router.post("/listings/regenerate-titles-selected", async (req, res) => {
+  const { cardIds } = req.body as { cardIds?: number[] };
+  if (!Array.isArray(cardIds) || cardIds.length === 0) {
+    res.status(400).json({ error: "cardIds must be a non-empty array" });
+    return;
+  }
+  try {
+    const listings = await db
+      .select({
+        id: listingsTable.id,
+        card: {
+          cardName: cardsTable.cardName,
+          setName: cardsTable.setName,
+          cardNumber: cardsTable.cardNumber,
+          year: cardsTable.year,
+          holoType: cardsTable.holoType,
+          quality: cardsTable.quality,
+          language: cardsTable.language,
+          rarity: cardsTable.rarity,
+          notes: cardsTable.notes,
+        },
+      })
+      .from(listingsTable)
+      .innerJoin(cardsTable, eq(listingsTable.cardId, cardsTable.id))
+      .where(inArray(listingsTable.cardId, cardIds));
+
+    res.json({ started: true, total: listings.length });
+
+    (async () => {
+      await Promise.all(listings.map(async (l) => {
+        try {
+          await db.update(listingsTable).set({
+            title: generateTitle(l.card),
+            description: generateDescription(l.card),
+            updatedAt: new Date(),
+          }).where(eq(listingsTable.id, l.id));
+        } catch { /* skip on error */ }
+      }));
+    })();
+  } catch (err) {
+    req.log.error({ err }, "Failed to regenerate titles for selected cards");
+    res.status(500).json({ error: "Failed to regenerate titles" });
+  }
+});
+
 // GET /listings/import/:jobId/progress
 router.get("/listings/import/:jobId/progress", async (req, res) => {
   const { jobId } = req.params;
