@@ -35,9 +35,9 @@ Respond ONLY with valid JSON. No markdown, no explanation.`;
   const userPrompt = `Analyze this Pokemon card image and return a JSON object with these exact fields:
 {
   "cardName": "full card name as printed",
-  "setName": "set/expansion name",
-  "cardNumber": "number as printed (e.g. 25/102)",
-  "year": "year printed on card",
+  "setName": "set/expansion name as printed on card (look for the set name near the bottom or the set symbol)",
+  "cardNumber": "number as printed including total (e.g. 25/102)",
+  "year": "the set release year — the RIGHTMOST year in the copyright line at the bottom (e.g. from '© 1995-2016 Nintendo' use '2016')",
   "quality": "NM|LP|MP|HP|D",
   "holoType": "standard|holo|reverse_holo",
   "language": "English|Japanese|etc",

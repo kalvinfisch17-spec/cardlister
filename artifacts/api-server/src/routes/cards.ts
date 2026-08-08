@@ -141,11 +141,13 @@ router.post("/cards/analyze", async (req, res) => {
     ]);
     const card = insertResult[0];
 
-    // Backfill set name from TCGPlayer if AI missed it, then save price
+    // Backfill set name and year from TCGPlayer if AI missed them
     const setName = analysis.setName ?? pricing.matchedSetName ?? null;
+    const year = analysis.year ?? pricing.matchedYear ?? null;
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (pricing.suggestedPrice !== null) updates.suggestedPrice = pricing.suggestedPrice;
     if (setName && !analysis.setName) updates.setName = setName;
+    if (year && !analysis.year) updates.year = year;
     if (Object.keys(updates).length > 1) {
       await db.update(cardsTable).set(updates).where(eq(cardsTable.id, card.id));
     }
@@ -224,9 +226,11 @@ router.post("/cards/batch-analyze", async (req, res) => {
         ]);
         const card = insertResult[0];
         const setName = analysis.setName ?? pricing.matchedSetName ?? null;
+        const year = analysis.year ?? pricing.matchedYear ?? null;
         const updates: Record<string, unknown> = { updatedAt: new Date() };
         if (pricing.suggestedPrice !== null) updates.suggestedPrice = pricing.suggestedPrice;
         if (setName && !analysis.setName) updates.setName = setName;
+        if (year && !analysis.year) updates.year = year;
         if (Object.keys(updates).length > 1) {
           await db.update(cardsTable).set(updates).where(eq(cardsTable.id, card.id));
         }
