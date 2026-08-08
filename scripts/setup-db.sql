@@ -54,6 +54,10 @@ ALTER TABLE cards ADD COLUMN IF NOT EXISTS image_url_back TEXT;
 -- Migration: add needs_price_review flag for cards where eBay pricing wasn't found
 ALTER TABLE cards ADD COLUMN IF NOT EXISTS needs_price_review BOOLEAN NOT NULL DEFAULT false;
 
+-- Migration: add sale_price and sold_at columns to track actual sale amounts
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS sale_price REAL;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS sold_at TIMESTAMP;
+
 -- Import jobs table (tracks background CSV import progress)
 CREATE TABLE IF NOT EXISTS import_jobs (
   id          TEXT PRIMARY KEY,

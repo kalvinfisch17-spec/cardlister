@@ -29,6 +29,8 @@ export const listingsTable = pgTable("listings", {
   price: real("price"),
   status: listingStatusEnum("status").default("draft").notNull(),
   ebayUrl: text("ebay_url"),
+  salePrice: real("sale_price"),
+  soldAt: timestamp("sold_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -202,7 +202,7 @@ router.get("/listings/stats", async (req, res) => {
     const [activeResult] = await db.select({ count: count() }).from(listingsTable).where(eq(listingsTable.status, "active"));
     const [soldResult] = await db.select({ count: count() }).from(listingsTable).where(eq(listingsTable.status, "sold"));
     const [endedResult] = await db.select({ count: count() }).from(listingsTable).where(eq(listingsTable.status, "ended"));
-    const [revenueResult] = await db.select({ total: sum(listingsTable.price) }).from(listingsTable).where(eq(listingsTable.status, "sold"));
+    const [revenueResult] = await db.select({ total: sum(listingsTable.salePrice) }).from(listingsTable).where(eq(listingsTable.status, "sold"));
 
     const recentListings = await db
       .select({
@@ -877,10 +877,10 @@ router.post("/listings/import/ebay-sold-csv", async (req, res) => {
       const listing = existing.rows[0];
       if (listing.status === "sold") { alreadySold++; continue; }
 
-      // Mark listing as sold
+      // Mark listing as sold, persisting sale price and sold date
       await pool.query(
-        `UPDATE listings SET status = 'sold', updated_at = NOW() WHERE id = $1`,
-        [listing.id]
+        `UPDATE listings SET status = 'sold', sale_price = $2, sold_at = $3, updated_at = NOW() WHERE id = $1`,
+        [listing.id, soldPrice && !isNaN(soldPrice) ? soldPrice : null, soldAt]
       );
 
       // Mark the associated card as sold too
