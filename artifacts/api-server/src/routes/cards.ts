@@ -112,7 +112,9 @@ router.post("/cards/analyze", async (req, res) => {
   try {
     const analysis = await analyzeCardImage(parsed.data.imageBase64);
 
-    const imageUrl = null; // front stored externally if needed
+    const imageUrl = parsed.data.imageBase64.startsWith("data:")
+      ? parsed.data.imageBase64
+      : `data:image/jpeg;base64,${parsed.data.imageBase64}`;
     const imageBackUrl = parsed.data.imageBackBase64
       ? `data:image/jpeg;base64,${parsed.data.imageBackBase64}`
       : null;
@@ -139,18 +141,19 @@ router.post("/cards/analyze", async (req, res) => {
     ]);
     const card = insertResult[0];
 
-    // Save suggested price immediately if found
-    if (pricing.suggestedPrice !== null) {
-      await db
-        .update(cardsTable)
-        .set({ suggestedPrice: pricing.suggestedPrice, updatedAt: new Date() })
-        .where(eq(cardsTable.id, card.id));
+    // Backfill set name from TCGPlayer if AI missed it, then save price
+    const setName = analysis.setName ?? pricing.matchedSetName ?? null;
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (pricing.suggestedPrice !== null) updates.suggestedPrice = pricing.suggestedPrice;
+    if (setName && !analysis.setName) updates.setName = setName;
+    if (Object.keys(updates).length > 1) {
+      await db.update(cardsTable).set(updates).where(eq(cardsTable.id, card.id));
     }
 
     res.json({
       cardId: card.id,
       cardName: analysis.cardName,
-      setName: analysis.setName,
+      setName,
       cardNumber: analysis.cardNumber,
       year: analysis.year,
       quality: analysis.quality,
@@ -194,6 +197,9 @@ router.post("/cards/batch-analyze", async (req, res) => {
     for (const img of images) {
       try {
         const analysis = await analyzeCardImage(img.imageBase64);
+        const imageUrl = img.imageBase64.startsWith("data:")
+          ? img.imageBase64
+          : `data:image/jpeg;base64,${img.imageBase64}`;
         const imageBackUrl = img.imageBackBase64
           ? `data:image/jpeg;base64,${img.imageBackBase64}`
           : null;
@@ -210,17 +216,19 @@ router.post("/cards/batch-analyze", async (req, res) => {
               language: analysis.language,
               rarity: analysis.rarity,
               status: "pending",
+              imageUrl,
               imageUrlBack: imageBackUrl,
             })
             .returning(),
           fetchSuggestedPrice(analysis),
         ]);
         const card = insertResult[0];
-        if (pricing.suggestedPrice !== null) {
-          await db
-            .update(cardsTable)
-            .set({ suggestedPrice: pricing.suggestedPrice, updatedAt: new Date() })
-            .where(eq(cardsTable.id, card.id));
+        const setName = analysis.setName ?? pricing.matchedSetName ?? null;
+        const updates: Record<string, unknown> = { updatedAt: new Date() };
+        if (pricing.suggestedPrice !== null) updates.suggestedPrice = pricing.suggestedPrice;
+        if (setName && !analysis.setName) updates.setName = setName;
+        if (Object.keys(updates).length > 1) {
+          await db.update(cardsTable).set(updates).where(eq(cardsTable.id, card.id));
         }
         job.results.push(card.id);
       } catch (err) {

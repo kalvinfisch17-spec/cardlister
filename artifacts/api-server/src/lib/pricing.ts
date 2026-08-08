@@ -44,11 +44,13 @@ export async function fetchSuggestedPrice(card: {
   lowestPrice: number | null;
   highestPrice: number | null;
   soldCount: number;
+  matchedSetName: string | null;
+  matchedCardName: string | null;
 }> {
-  const { marketPrice } = await fetchTcgMarketPrice(card);
+  const { marketPrice, matchedSetName, matchedCardName } = await fetchTcgMarketPrice(card);
 
   if (marketPrice === null || marketPrice <= 0) {
-    return { suggestedPrice: null, averagePrice: null, lowestPrice: null, highestPrice: null, soldCount: 0 };
+    return { suggestedPrice: null, averagePrice: null, lowestPrice: null, highestPrice: null, soldCount: 0, matchedSetName, matchedCardName };
   }
 
   // Apply fees formula
@@ -61,5 +63,7 @@ export async function fetchSuggestedPrice(card: {
     lowestPrice: marketPrice,
     highestPrice: marketPrice,
     soldCount: 1,                // 1 source (TCGPlayer market)
+    matchedSetName,
+    matchedCardName,
   };
 }

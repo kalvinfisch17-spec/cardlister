@@ -73,7 +73,7 @@ export async function fetchTcgMarketPrice(card: {
   setName?: string | null;
   cardNumber?: string | null;
   holoType?: string | null;
-}): Promise<{ marketPrice: number | null; source: string }> {
+}): Promise<{ marketPrice: number | null; matchedCardName: string | null; matchedSetName: string | null; source: string }> {
   try {
     // Clean names in case the DB still has the old set-prefixed format
     const cardName = card.cardName ? cleanCardName(card.cardName) : null;
@@ -85,7 +85,7 @@ export async function fetchTcgMarketPrice(card: {
     if (card.cardNumber) parts.push(`number:"${card.cardNumber.replace(/\/.*/g, "")}"`); // strip "/115" suffix
     if (setName) parts.push(`set.name:"${setName.replace(/"/g, "")}"`);
 
-    if (parts.length === 0) return { marketPrice: null, source: "no search terms" };
+    if (parts.length === 0) return { marketPrice: null, matchedCardName: null, matchedSetName: null, source: "no search terms" };
 
     const query = parts.join(" ");
     const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=5&select=id,name,number,set,tcgplayer`;
@@ -96,16 +96,21 @@ export async function fetchTcgMarketPrice(card: {
     }
 
     const res = await fetch(url, { headers });
-    if (!res.ok) return { marketPrice: null, source: `API error ${res.status}` };
+    if (!res.ok) return { marketPrice: null, matchedCardName: null, matchedSetName: null, source: `API error ${res.status}` };
 
     const data = (await res.json()) as { data: TcgCard[] };
-    if (!data.data?.length) return { marketPrice: null, source: "no results" };
+    if (!data.data?.length) return { marketPrice: null, matchedCardName: null, matchedSetName: null, source: "no results" };
 
     // Use the first result — most specific query wins
     const match = data.data[0];
     const price = match.tcgplayer?.prices ? pickPrice(match.tcgplayer.prices, card.holoType) : null;
-    return { marketPrice: price, source: `TCGPlayer (${match.name} ${match.set?.name ?? ""})` };
+    return {
+      marketPrice: price,
+      matchedCardName: match.name ?? null,
+      matchedSetName: match.set?.name ?? null,
+      source: `TCGPlayer (${match.name} ${match.set?.name ?? ""})`,
+    };
   } catch {
-    return { marketPrice: null, source: "fetch failed" };
+    return { marketPrice: null, matchedCardName: null, matchedSetName: null, source: "fetch failed" };
   }
 }
