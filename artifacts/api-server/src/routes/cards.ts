@@ -238,6 +238,7 @@ router.post("/cards/batch-analyze", async (req, res) => {
         if (pricing.suggestedPrice !== null) updates.suggestedPrice = pricing.suggestedPrice;
         if (setName) updates.setName = setName;
         if (year) updates.year = year;
+        if (pricing.tcgImageUrl) updates.tcgImageUrl = pricing.tcgImageUrl;
         if (Object.keys(updates).length > 1) {
           await db.update(cardsTable).set(updates).where(eq(cardsTable.id, card.id));
         }
@@ -608,6 +609,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "*Duration",
       "ConditionID",
       "Description",
+      "PicURL",
       "Location",
       "ShippingType",
       "ShippingService-1:Option",
@@ -619,7 +621,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       `"${String(val).replace(/"/g, '""')}"`;
 
     const rows = cards.map((card) => [
-      "Add",                          // Action
+      "Add",                           // Action
       "183454",                        // Pokemon Individual Cards category
       makeTitle(card),                 // Title (≤80 chars)
       card.suggestedPrice!.toFixed(2), // StartPrice
@@ -628,6 +630,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "GTC",                           // Duration (Good Till Cancelled)
       conditionId(card.quality),       // ConditionID
       makeDescription(card),           // Description
+      card.tcgImageUrl ?? "",          // PicURL (pokemontcg.io high-res image)
       location,                        // Location (required by eBay)
       "Flat",                          // ShippingType
       "USPSFirstClass",                // ShippingService

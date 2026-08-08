@@ -900,6 +900,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
         language: cardsTable.language,
         rarity: cardsTable.rarity,
         year: cardsTable.year,
+        tcgImageUrl: cardsTable.tcgImageUrl,
       })
       .from(listingsTable)
       .innerJoin(cardsTable, eq(listingsTable.cardId, cardsTable.id))
@@ -926,7 +927,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
     const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";
     const columns = [
       ACTION_HEADER, "*Category", "*Title", "*StartPrice", "*Quantity",
-      "*Format", "*Duration", "ConditionID", "Description", "Location",
+      "*Format", "*Duration", "ConditionID", "Description", "PicURL", "Location",
       "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
     ];
 
@@ -939,7 +940,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       return [
         "Add", "183454", title, price.toFixed(2), "1",
         "FixedPrice", "GTC", conditionId(row.quality),
-        description, location, "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
+        description, row.tcgImageUrl ?? "", location, "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
       ].map(escape).join(",");
     });
 

@@ -61,6 +61,9 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS sold_at TIMESTAMP;
 -- Migration: add 'sold' value to card_status enum
 ALTER TYPE card_status ADD VALUE IF NOT EXISTS 'sold';
 
+-- Migration: add tcg_image_url column for pokemontcg.io card image (used as PicURL in eBay CSV)
+ALTER TABLE cards ADD COLUMN IF NOT EXISTS tcg_image_url TEXT;
+
 -- Migration: add 'cosmo_holo' value to holo_type enum
 ALTER TYPE holo_type ADD VALUE IF NOT EXISTS 'cosmo_holo';
 

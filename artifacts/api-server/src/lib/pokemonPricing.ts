@@ -18,6 +18,7 @@ interface TcgCard {
   name: string;
   number?: string;
   set?: { name: string; total?: number; releaseDate?: string };
+  images?: { small?: string; large?: string };
   tcgplayer?: {
     prices?: {
       holofoil?: TcgPriceEntry;
@@ -80,7 +81,7 @@ export async function fetchTcgMarketPrice(card: {
   setName?: string | null;
   cardNumber?: string | null;
   holoType?: string | null;
-}): Promise<{ marketPrice: number | null; matchedCardName: string | null; matchedSetName: string | null; matchedYear: string | null; source: string }> {
+}): Promise<{ marketPrice: number | null; matchedCardName: string | null; matchedSetName: string | null; matchedYear: string | null; tcgImageUrl: string | null; source: string }> {
   try {
     // Clean names in case the DB still has the old set-prefixed format
     const cardName = card.cardName ? cleanCardName(card.cardName) : null;
@@ -96,7 +97,7 @@ export async function fetchTcgMarketPrice(card: {
       numStr = String(parseInt(num.trim(), 10)); // strip leading zeros (062 → 62)
     }
 
-    if (!numStr && !cardName) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no search terms" };
+    if (!numStr && !cardName) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, tcgImageUrl: null, source: "no search terms" };
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (process.env.POKEMON_TCG_API_KEY) {
@@ -104,7 +105,7 @@ export async function fetchTcgMarketPrice(card: {
     }
 
     const tryQuery = async (query: string) => {
-      const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=10&select=id,name,number,set,tcgplayer`;
+      const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=10&select=id,name,number,set,images,tcgplayer`;
       console.log(`[pokemonPricing] query: ${query}`);
       let res = await fetch(url, { headers });
       // Retry once on transient 5xx errors
@@ -126,7 +127,7 @@ export async function fetchTcgMarketPrice(card: {
     let results = nameAndNumber ? await tryQuery(nameAndNumber) : null;
 
     if (!results?.length) {
-      return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no results" };
+      return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, tcgImageUrl: null, source: "no results" };
     }
 
     // When multiple results, prefer the one whose set name matches AI's identification
@@ -141,16 +142,18 @@ export async function fetchTcgMarketPrice(card: {
     const price = match.tcgplayer?.prices ? pickPrice(match.tcgplayer.prices, card.holoType) : null;
     // Extract year from releaseDate (format: "YYYY/MM/DD")
     const matchedYear = match.set?.releaseDate ? match.set.releaseDate.split("/")[0] : null;
+    const tcgImageUrl = match.images?.large ?? match.images?.small ?? null;
     console.log(`[pokemonPricing] matched: ${match.name} | ${match.set?.name} | ${match.set?.releaseDate} | price: ${price}`);
     return {
       marketPrice: price,
       matchedCardName: match.name ?? null,
       matchedSetName: match.set?.name ?? null,
       matchedYear,
+      tcgImageUrl,
       source: `TCGPlayer (${match.name} ${match.set?.name ?? ""})`,
     };
   } catch (err) {
     console.log(`[pokemonPricing] fetch failed:`, err);
-    return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "fetch failed" };
+    return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, tcgImageUrl: null, source: "fetch failed" };
   }
 }

@@ -47,11 +47,12 @@ export async function fetchSuggestedPrice(card: {
   matchedSetName: string | null;
   matchedCardName: string | null;
   matchedYear: string | null;
+  tcgImageUrl: string | null;
 }> {
-  const { marketPrice, matchedSetName, matchedCardName, matchedYear } = await fetchTcgMarketPrice(card);
+  const { marketPrice, matchedSetName, matchedCardName, matchedYear, tcgImageUrl } = await fetchTcgMarketPrice(card);
 
   if (marketPrice === null || marketPrice <= 0) {
-    return { suggestedPrice: null, averagePrice: null, lowestPrice: null, highestPrice: null, soldCount: 0, matchedSetName, matchedCardName, matchedYear };
+    return { suggestedPrice: null, averagePrice: null, lowestPrice: null, highestPrice: null, soldCount: 0, matchedSetName, matchedCardName, matchedYear, tcgImageUrl };
   }
 
   // Apply fees formula
@@ -67,5 +68,6 @@ export async function fetchSuggestedPrice(card: {
     matchedSetName,
     matchedCardName,
     matchedYear,
+    tcgImageUrl,
   };
 }
