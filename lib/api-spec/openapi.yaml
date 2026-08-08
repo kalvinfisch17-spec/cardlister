@@ -777,6 +777,11 @@ components:
           type: ["string", "null"]
         price:
           type: ["number", "null"]
+        salePrice:
+          type: ["number", "null"]
+        soldAt:
+          type: ["string", "null"]
+          format: date-time
         status:
           type: string
           enum: [draft, active, sold, ended]

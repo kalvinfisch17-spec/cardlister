@@ -259,6 +259,8 @@ router.get("/listings", async (req, res) => {
         title: listingsTable.title,
         description: listingsTable.description,
         price: listingsTable.price,
+        salePrice: listingsTable.salePrice,
+        soldAt: listingsTable.soldAt,
         status: listingsTable.status,
         ebayUrl: listingsTable.ebayUrl,
         createdAt: listingsTable.createdAt,

@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { Shell } from "@/components/layout/shell";
 import { useListListings, useDeleteListing } from "@workspace/api-client-react";
-import { Search, ExternalLink, Activity, Filter, Trash2, Loader2, Download, RefreshCw } from "lucide-react";
+import { Search, ExternalLink, Activity, Filter, Trash2, Loader2, Download, RefreshCw, TrendingDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+function getPriceDiscrepancy(price: number | null | undefined, salePrice: number | null | undefined) {
+  if (!price || !salePrice) return null;
+  return (salePrice - price) / price; // negative = sold below list
+}
 
 export default function ListingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,6 +25,14 @@ export default function ListingsPage() {
     return matchesSearch && matchesStatus;
   }) || [];
 
+  // Aggregate discount stats for sold listings with both prices
+  const soldWithBoth = filteredListings.filter(
+    l => l.status === "sold" && l.price != null && l.salePrice != null
+  );
+  const avgDiscount = soldWithBoth.length > 0
+    ? soldWithBoth.reduce((sum, l) => sum + getPriceDiscrepancy(l.price, l.salePrice)!, 0) / soldWithBoth.length
+    : null;
+
   const handleDelete = async (id: number) => {
     if (confirm("End this listing and remove it from CardLister?")) {
       await deleteListing.mutateAsync({ id });
@@ -28,6 +41,8 @@ export default function ListingsPage() {
     }
   };
 
+  const showSoldColumns = statusFilter === "sold" || statusFilter === "all";
+
   return (
     <Shell>
       <div className="flex flex-col gap-6">
@@ -35,6 +50,20 @@ export default function ListingsPage() {
           <h1 className="text-3xl font-display font-extrabold tracking-tight">eBay Listings</h1>
           <p className="text-muted-foreground mt-1">Manage active listings and view sales history.</p>
         </div>
+
+        {/* Average discount banner — only when sold listings with data are visible */}
+        {avgDiscount !== null && soldWithBoth.length > 0 && (
+          <div className="cockpit-panel p-4 flex items-center gap-4 bg-slate-900 border-slate-800 text-slate-100">
+            <TrendingDown className={`w-5 h-5 flex-shrink-0 ${avgDiscount < -0.1 ? "text-amber-400" : "text-slate-400"}`} />
+            <div>
+              <span className="text-xs font-mono uppercase tracking-widest text-slate-500 mr-2">Avg sale discount</span>
+              <span className={`text-lg font-display font-bold ${avgDiscount < -0.1 ? "text-amber-400" : avgDiscount < 0 ? "text-slate-300" : "text-emerald-400"}`}>
+                {avgDiscount >= 0 ? "+" : ""}{(avgDiscount * 100).toFixed(1)}%
+              </span>
+              <span className="text-xs text-slate-500 ml-2 font-mono">across {soldWithBoth.length} sold listing{soldWithBoth.length !== 1 ? "s" : ""}</span>
+            </div>
+          </div>
+        )}
 
         <div className="cockpit-panel p-4 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-900 border-slate-800 text-slate-100">
           <div className="flex gap-4 w-full sm:w-auto">
@@ -119,7 +148,10 @@ export default function ListingsPage() {
                 <tr className="border-b border-card-border bg-muted/30">
                   <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground w-16">Item</th>
                   <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">Listing Title & ID</th>
-                  <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">Price</th>
+                  <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">List Price</th>
+                  {showSoldColumns && (
+                    <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">Sale Price</th>
+                  )}
                   <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">Status</th>
                   <th className="py-3 px-4 text-right font-display font-semibold text-muted-foreground">Actions</th>
                 </tr>
@@ -127,69 +159,104 @@ export default function ListingsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center">
+                    <td colSpan={showSoldColumns ? 6 : 5} className="py-12 text-center">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
                       <p className="text-muted-foreground text-sm font-mono">Syncing with eBay...</p>
                     </td>
                   </tr>
                 ) : filteredListings.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                    <td colSpan={showSoldColumns ? 6 : 5} className="py-12 text-center text-muted-foreground">
                       No listings found.
                     </td>
                   </tr>
                 ) : (
-                  filteredListings.map(listing => (
-                    <tr key={listing.id} className="border-b border-card-border last:border-0 hover:bg-muted/10 transition-colors group">
-                      <td className="py-3 px-4">
-                        <div className="w-10 h-14 bg-muted border border-border rounded-sm overflow-hidden shadow-sm">
-                          {listing.card?.imageUrl ? (
-                            <img src={listing.card.imageUrl} alt="Card" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-slate-200" />
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-foreground line-clamp-1 max-w-md">
-                          {listing.title || (listing.card ? `${listing.card.cardName} - ${listing.card.setName}` : 'Untitled Listing')}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-0.5 font-mono flex items-center gap-2">
-                          <span>eBay ID: {listing.ebayListingId || 'Pending'}</span>
-                          <span>•</span>
-                          <span>Created {new Date(listing.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 font-mono font-bold text-emerald-600">
-                        ${listing.price?.toFixed(2) || '---'}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded-sm border ${
-                          listing.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          listing.status === 'sold' ? 'bg-primary/10 text-primary border-primary/20' :
-                          listing.status === 'draft' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                          'bg-slate-100 text-slate-600 border-slate-300'
-                        }`}>
-                          {listing.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          {listing.ebayUrl && (
-                            <a href={listing.ebayUrl} target="_blank" rel="noreferrer" className="text-xs font-bold uppercase tracking-wider text-foreground border border-border px-3 py-1.5 rounded-sm hover:bg-muted transition-colors inline-flex items-center gap-1.5 cursor-pointer">
-                              <ExternalLink className="w-3 h-3" /> View
-                            </a>
-                          )}
-                          <button 
-                            onClick={() => handleDelete(listing.id)}
-                            className="text-muted-foreground hover:text-destructive p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  filteredListings.map(listing => {
+                    const discrepancy = getPriceDiscrepancy(listing.price, listing.salePrice);
+                    const isMismatch = discrepancy !== null && Math.abs(discrepancy) > 0.1;
+
+                    return (
+                      <tr
+                        key={listing.id}
+                        className={`border-b border-card-border last:border-0 transition-colors group ${
+                          isMismatch
+                            ? "bg-amber-950/20 hover:bg-amber-950/30"
+                            : "hover:bg-muted/10"
+                        }`}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="w-10 h-14 bg-muted border border-border rounded-sm overflow-hidden shadow-sm">
+                            {listing.card?.imageUrl ? (
+                              <img src={listing.card.imageUrl} alt="Card" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-slate-200" />
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-bold text-foreground line-clamp-1 max-w-md">
+                            {listing.title || (listing.card ? `${listing.card.cardName} - ${listing.card.setName}` : 'Untitled Listing')}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5 font-mono flex items-center gap-2">
+                            <span>eBay ID: {listing.ebayListingId || 'Pending'}</span>
+                            <span>•</span>
+                            {listing.soldAt ? (
+                              <span>Sold {new Date(listing.soldAt).toLocaleDateString()}</span>
+                            ) : (
+                              <span>Created {new Date(listing.createdAt).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-mono font-bold text-emerald-600">
+                          ${listing.price?.toFixed(2) || '---'}
+                        </td>
+                        {showSoldColumns && (
+                          <td className="py-3 px-4 font-mono font-bold">
+                            {listing.status === "sold" && listing.salePrice != null ? (
+                              <span className={`flex items-center gap-1.5 ${isMismatch ? "text-amber-400" : "text-emerald-500"}`}>
+                                ${listing.salePrice.toFixed(2)}
+                                {discrepancy !== null && (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+                                    ({discrepancy >= 0 ? "+" : ""}{(discrepancy * 100).toFixed(0)}%)
+                                  </span>
+                                )}
+                                {isMismatch && (
+                                  <TrendingDown className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        )}
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded-sm border ${
+                            listing.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            listing.status === 'sold' ? 'bg-primary/10 text-primary border-primary/20' :
+                            listing.status === 'draft' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-slate-100 text-slate-600 border-slate-300'
+                          }`}>
+                            {listing.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            {listing.ebayUrl && (
+                              <a href={listing.ebayUrl} target="_blank" rel="noreferrer" className="text-xs font-bold uppercase tracking-wider text-foreground border border-border px-3 py-1.5 rounded-sm hover:bg-muted transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                                <ExternalLink className="w-3 h-3" /> View
+                              </a>
+                            )}
+                            <button 
+                              onClick={() => handleDelete(listing.id)}
+                              className="text-muted-foreground hover:text-destructive p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
