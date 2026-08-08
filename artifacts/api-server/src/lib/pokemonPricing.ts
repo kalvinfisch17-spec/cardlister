@@ -106,7 +106,12 @@ export async function fetchTcgMarketPrice(card: {
     const tryQuery = async (query: string) => {
       const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=10&select=id,name,number,set,tcgplayer`;
       console.log(`[pokemonPricing] query: ${query}`);
-      const res = await fetch(url, { headers });
+      let res = await fetch(url, { headers });
+      // Retry once on transient 5xx errors
+      if (res.status >= 500) {
+        await new Promise(r => setTimeout(r, 600));
+        res = await fetch(url, { headers });
+      }
       if (!res.ok) { console.log(`[pokemonPricing] API error ${res.status} for: ${query}`); return null; }
       const data = (await res.json()) as { data: TcgCard[] };
       if (!data.data?.length) { console.log(`[pokemonPricing] no results for: ${query}`); return null; }

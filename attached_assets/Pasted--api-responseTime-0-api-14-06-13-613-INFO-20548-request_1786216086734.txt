@@ -1,0 +1,200 @@
+[api]     responseTime: 0
+[api] [14:06:13.613] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 34,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/0d7b8720-225a-4442-a717-bfdc7f0bc040/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [14:06:14.657] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 35,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/0d7b8720-225a-4442-a717-bfdc7f0bc040/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [14:06:15.693] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 36,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/0d7b8720-225a-4442-a717-bfdc7f0bc040/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [14:06:16.718] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 37,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/0d7b8720-225a-4442-a717-bfdc7f0bc040/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [14:06:17.735] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 38,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/0d7b8720-225a-4442-a717-bfdc7f0bc040/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [14:06:18.753] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 39,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/0d7b8720-225a-4442-a717-bfdc7f0bc040/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [14:06:20.132] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 40,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 24
+[api] [14:06:20.275] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 41,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 127
+[api] [pokemonPricing] matched: Team Rocket's Zubat | Destined Rivals | 2025/05/30 | price: 0.26
+[api] [cardAnalysis] AI result: name="Ethan's Cyndaquil" set="null" number="032/182" year="2025" holo="standard"
+[api] [pokemonPricing] query: name:"Ethan's Cyndaquil" number:"32"
+[api] [pokemonPricing] API error 500 for: name:"Ethan's Cyndaquil" number:"32"
+[api] [14:06:28.933] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 42,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [14:06:29.058] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 43,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 126
+[api] [pokemonPricing] query: name:"Ethan's Cyndaquil" number:"32"
+[api] [14:06:35.544] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 44,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1922"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 11
+[api] [14:06:35.547] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 45,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 3
+[api] [pokemonPricing] matched: Ethan's Cyndaquil | Destined Rivals | 2025/05/30 | price: 0.21
+[api] [14:06:36.076] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 46,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1922/pricing"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 531
+[api] [14:06:49.812] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 47,
+[api]       "method": "PATCH",
+[api]       "url": "/api/cards/1922"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 38
+[api] [14:06:49.886] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 48,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1922"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 7
+[api] [14:06:51.762] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 49,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [14:06:51.910] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 50,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 110
+[api] [pokemonPricing] query: name:"Team Rocket's Zubat" number:"120"
+[api] [14:06:55.507] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 51,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [14:06:55.540] INFO (20548): request completed
+[api]     req: {
+[api]       "id": 52,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1921"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 34
+[api] [pokemonPricing] API error 500 for: name:"Team Rocket's Zubat" number:"120"
+[api] [14:06:55.782] INFO (20548): request completed

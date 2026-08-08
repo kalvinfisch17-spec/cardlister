@@ -20,10 +20,10 @@ Analyze the provided card image and extract all available information.
 
 HOLO TYPE — look carefully at where foil/shimmer appears on the card surface:
 - "holo" = ONLY the illustration/art box has a rainbow holographic pattern (shifts colors at different angles). The card frame, borders, and text areas are flat/matte with NO shimmer.
-- "reverse_holo" = The card frame, borders, and background areas OUTSIDE the art box have a sparkly or holographic texture. The art box itself is flat/matte (NOT foil). Very common in sets from 2003 onward. Look for shimmer in the border/frame area.
-- "cosmo_holo" = Tiny star-like sparkles scattered across the ENTIRE card face including the art — looks like a star field or cosmos. Common on blister promotional cards (McDonald's promos, blister pack exclusives). Distinct from holo because the stars appear over the whole card, not just the art.
-- "standard" = Completely flat and matte everywhere. No shimmer, sparkle, or rainbow effect on any part of the card.
-Key rule: ask yourself WHERE the foil is — art box only → holo; outside the art box → reverse_holo; star sparkles over everything → cosmo_holo; nowhere → standard.
+- "reverse_holo" = The card frame, borders, and background areas OUTSIDE the art box have a clearly visible sparkly or rainbow texture. The art box itself is flat/matte (NOT foil). Must be clearly visible shimmer — not just a slight paper texture or print pattern.
+- "cosmo_holo" = Tiny star-like sparkles scattered across the ENTIRE card face including the art — looks like a star field or cosmos. Common on blister promotional cards (McDonald's promos, blister pack exclusives).
+- "standard" = No foil or holographic shimmer anywhere. If you are unsure whether something is reverse_holo or standard, default to "standard". A slight paper texture, embossing, or print sheen is NOT reverse_holo.
+Key rule: ask yourself WHERE the foil is — art box only → holo; clear rainbow/sparkle shimmer outside the art box → reverse_holo; star sparkles everywhere → cosmo_holo; no obvious foil anywhere → standard.
 
 QUALITY — standard grading:
 - "NM" = Near Mint: minimal to no play wear, edges sharp, surface clean
