@@ -223,8 +223,8 @@ router.post("/cards/batch-analyze", async (req, res) => {
             .where(eq(cardsTable.id, card.id));
         }
         job.results.push(card.id);
-      } catch {
-        // Skip failed images
+      } catch (err) {
+        console.error("[batch-analyze] Failed to process image:", err);
       }
       job.processed += 1;
     }

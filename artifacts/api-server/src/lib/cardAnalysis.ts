@@ -101,6 +101,7 @@ Use null for any field you cannot determine with confidence.`;
       confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.7,
     };
   } catch (err) {
+    console.error("[cardAnalysis] AI call failed:", err);
     return {
       cardName: null,
       setName: null,
