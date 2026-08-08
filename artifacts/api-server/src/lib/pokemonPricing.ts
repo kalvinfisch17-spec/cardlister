@@ -33,7 +33,7 @@ function pickPrice(prices: NonNullable<NonNullable<TcgCard["tcgplayer"]>["prices
   if (!prices) return null;
 
   // Map our holo types to TCGPlayer price buckets (in preference order)
-  if (holoType === "holo") {
+  if (holoType === "holo" || holoType === "cosmo_holo") {
     return (
       prices.holofoil?.market ??
       prices["1stEditionHolofoil"]?.market ??

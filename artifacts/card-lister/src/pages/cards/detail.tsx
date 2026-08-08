@@ -360,6 +360,7 @@ export default function CardDetailPage() {
                         <option value="standard">Standard (Non-Foil)</option>
                         <option value="holo">Holo</option>
                         <option value="reverse_holo">Reverse Holo</option>
+                        <option value="cosmo_holo">Cosmo Holo</option>
                       </select>
                     ) : (
                       <div className="font-mono font-medium text-sm py-2 border-b border-dashed border-border capitalize">{card.holoType?.replace('_', ' ') || 'Standard'}</div>

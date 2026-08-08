@@ -61,6 +61,9 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS sold_at TIMESTAMP;
 -- Migration: add 'sold' value to card_status enum
 ALTER TYPE card_status ADD VALUE IF NOT EXISTS 'sold';
 
+-- Migration: add 'cosmo_holo' value to holo_type enum
+ALTER TYPE holo_type ADD VALUE IF NOT EXISTS 'cosmo_holo';
+
 -- Import jobs table (tracks background CSV import progress)
 CREATE TABLE IF NOT EXISTS import_jobs (
   id          TEXT PRIMARY KEY,

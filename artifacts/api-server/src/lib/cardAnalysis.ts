@@ -6,7 +6,7 @@ export interface CardAnalysisData {
   cardNumber: string | null;
   year: string | null;
   quality: string | null;
-  holoType: "standard" | "holo" | "reverse_holo" | null;
+  holoType: "standard" | "holo" | "reverse_holo" | "cosmo_holo" | null;
   language: string | null;
   rarity: string | null;
   confidence: number;
@@ -21,6 +21,7 @@ Analyze the provided card image and extract all available information.
 For holoType, determine:
 - "holo" = the card art/illustration has a foil/holographic pattern
 - "reverse_holo" = the card border/background has a foil pattern but the art does NOT
+- "cosmo_holo" = a starry/cosmic sparkle pattern covering the entire card face (common on blister promo cards)
 - "standard" = no foil/holographic elements visible
 
 For quality, use standard grading:
@@ -39,7 +40,7 @@ Respond ONLY with valid JSON. No markdown, no explanation.`;
   "cardNumber": "number as printed including total (e.g. 25/102)",
   "year": "the set release year — the RIGHTMOST year in the copyright line at the bottom (e.g. from '© 1995-2016 Nintendo' use '2016')",
   "quality": "NM|LP|MP|HP|D",
-  "holoType": "standard|holo|reverse_holo",
+  "holoType": "standard|holo|reverse_holo|cosmo_holo",
   "language": "English|Japanese|etc",
   "rarity": "Common|Uncommon|Rare|Holo Rare|Ultra Rare|etc",
   "confidence": 0.0-1.0

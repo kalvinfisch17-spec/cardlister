@@ -14,6 +14,7 @@ export const holoTypeEnum = pgEnum("holo_type", [
   "standard",
   "holo",
   "reverse_holo",
+  "cosmo_holo",
 ]);
 
 export const cardStatusEnum = pgEnum("card_status", [
