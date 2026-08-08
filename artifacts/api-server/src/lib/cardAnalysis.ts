@@ -60,8 +60,12 @@ Use null for any field you cannot determine with confidence.`;
       ? imageBase64.split(",")[1]
       : imageBase64;
 
+    const model = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
+      ? "gpt-5.6-luna"   // Replit proxy — use internal model name
+      : "gpt-4o";        // Standard OpenAI key — use real model name
+
     const response = await openai.chat.completions.create({
-      model: "gpt-5.6-luna",
+      model,
       max_completion_tokens: 512,
       messages: [
         { role: "system", content: systemPrompt },
