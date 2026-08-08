@@ -70,6 +70,11 @@ router.get("/cards/stats", async (req, res) => {
       .from(cardsTable)
       .where(eq(cardsTable.holoType, "reverse_holo"));
 
+    const [cosmoHoloResult] = await db
+      .select({ count: count() })
+      .from(cardsTable)
+      .where(eq(cardsTable.holoType, "cosmo_holo"));
+
     const qualityRows = await db
       .select({ quality: cardsTable.quality, count: count() })
       .from(cardsTable)
@@ -90,6 +95,7 @@ router.get("/cards/stats", async (req, res) => {
         standard: Number(standardResult?.count ?? 0),
         holo: Number(holoResult?.count ?? 0),
         reverse_holo: Number(reverseHoloResult?.count ?? 0),
+        cosmo_holo: Number(cosmoHoloResult?.count ?? 0),
       },
       qualityBreakdown: qualityRows
         .filter((r) => r.quality != null)
@@ -281,7 +287,7 @@ router.get("/cards", async (req, res) => {
   try {
     const conditions = [];
     if (status) conditions.push(eq(cardsTable.status, status as "pending" | "reviewed" | "listed"));
-    if (holoType) conditions.push(eq(cardsTable.holoType, holoType as "standard" | "holo" | "reverse_holo"));
+    if (holoType) conditions.push(eq(cardsTable.holoType, holoType as "standard" | "holo" | "reverse_holo" | "cosmo_holo"));
     if (search) {
       conditions.push(
         or(

@@ -10,4 +10,5 @@ export type CardStatsHoloBreakdown = {
   standard: number;
   holo: number;
   reverse_holo: number;
+  cosmo_holo: number;
 };

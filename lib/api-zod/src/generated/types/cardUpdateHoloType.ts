@@ -13,4 +13,5 @@ export const CardUpdateHoloType = {
   standard: 'standard',
   holo: 'holo',
   reverse_holo: 'reverse_holo',
+  cosmo_holo: 'cosmo_holo',
 } as const;

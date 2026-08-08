@@ -46,7 +46,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [standard, holo, reverse_holo]
+            enum: [standard, holo, reverse_holo, cosmo_holo]
         - name: search
           in: query
           schema:
@@ -545,7 +545,7 @@ components:
           description: "NM, LP, MP, HP, or D"
         holoType:
           type: ["string", "null"]
-          enum: ["standard", "holo", "reverse_holo", null]
+          enum: ["standard", "holo", "reverse_holo", "cosmo_holo", null]
         language:
           type: ["string", "null"]
         rarity:
@@ -656,7 +656,7 @@ components:
           type: ["string", "null"]
         holoType:
           type: ["string", "null"]
-          enum: ["standard", "holo", "reverse_holo", null]
+          enum: ["standard", "holo", "reverse_holo", "cosmo_holo", null]
         language:
           type: ["string", "null"]
         rarity:
@@ -714,7 +714,7 @@ components:
               type: integer
             reverse_holo:
               type: integer
-          required: [standard, holo, reverse_holo]
+          required: [standard, holo, reverse_holo, cosmo_holo]
         qualityBreakdown:
           type: array
           items:
