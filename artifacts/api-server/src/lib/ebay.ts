@@ -229,7 +229,6 @@ export function generateTitle(card: {
 }): string {
   const parts: string[] = [];
 
-  if (card.year) parts.push(card.year);
   if (card.cardName) parts.push(card.cardName);
 
   if (card.holoType === "holo") parts.push("Holo");
@@ -237,6 +236,7 @@ export function generateTitle(card: {
 
   if (card.rarity) parts.push(card.rarity);
   if (card.setName) parts.push(card.setName);
+  if (card.year) parts.push(card.year);
   if (card.cardNumber) parts.push(`#${card.cardNumber}`);
   if (card.language && card.language.toLowerCase() !== "english")
     parts.push(card.language);
