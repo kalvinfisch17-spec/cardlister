@@ -68,9 +68,11 @@ function cleanSetName(name: string): string {
   return name.replace(/^[A-Z]{1,5}\d{1,3}[a-z]?:\s+/, "").trim();
 }
 
-/** Remove characters that break pokemontcg.io's Lucene query parser (apostrophes, quotes, etc.) */
+/** Remove characters that break pokemontcg.io's Lucene query parser.
+ *  Apostrophes are intentionally kept — the API stores names like "Team Rocket's Orbeetle" with them.
+ *  The & character (e.g. "Scarlet & Violet") is the main offender and must be removed. */
 function sanitizeQueryTerm(term: string): string {
-  return term.replace(/['"']/g, "").replace(/[+\-!(){}\[\]^~*?:\\/]/g, " ").replace(/\s+/g, " ").trim();
+  return term.replace(/["""]/g, "").replace(/[&+!(){}\[\]^~*?:\\/]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export async function fetchTcgMarketPrice(card: {

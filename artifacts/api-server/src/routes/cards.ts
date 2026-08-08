@@ -246,8 +246,6 @@ router.post("/cards/batch-analyze", async (req, res) => {
         console.error("[batch-analyze] Failed to process image:", err);
       }
       job.processed += 1;
-      // Pace requests to stay within pokemontcg.io's 60 req/min free tier
-      await new Promise(r => setTimeout(r, 1000));
     }
     job.done = true;
   })();
