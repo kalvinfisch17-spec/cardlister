@@ -1,0 +1,130 @@
+[api] [12:50:53.864] INFO (13972): Server listening
+[api]     port: 5001
+[api] [12:51:03.819] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 2,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 30
+[api] [12:51:03.836] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 1,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 54
+[api] [12:51:06.475] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 3,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [cardAnalysis] AI call failed: AuthenticationError: 401 Incorrect API key provided: sk-.... You can find your API key at https://platform.openai.com/account/api-keys.
+[api]     at _APIError.generate (C:\Users\Kalvi\cardlister\node_modules\.pnpm\openai@6.49.0_zod@3.25.76\node_modules\openai\src\core\error.ts:77:14)
+[api]     at OpenAI.makeStatusError (C:\Users\Kalvi\cardlister\node_modules\.pnpm\openai@6.49.0_zod@3.25.76\node_modules\openai\src\client.ts:636:28)
+[api]     at OpenAI.makeRequest (C:\Users\Kalvi\cardlister\node_modules\.pnpm\openai@6.49.0_zod@3.25.76\node_modules\openai\src\client.ts:932:24)
+[api]     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[api]     at async analyzeCardImage (C:\Users\Kalvi\cardlister\artifacts\api-server\src\lib\cardAnalysis.ts:67:22)
+[api]     at async <anonymous> (C:\Users\Kalvi\cardlister\artifacts\api-server\src\routes\cards.ts:196:26) {
+[api]   status: 401,
+[api]   headers: Headers {
+[api]     date: 'Sat, 08 Aug 2026 17:51:14 GMT',
+[api]     'content-type': 'text/plain',
+[api]     'content-length': '252',
+[api]     connection: 'keep-alive',
+[api]     'cf-ray': 'a2805e321bd2393c-MSP',
+[api]     'cf-cache-status': 'DYNAMIC',
+[api]     server: 'cloudflare',
+[api]     'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+[api]     'access-control-expose-headers': 'CF-Ray, CF-Ray',
+[api]     'x-content-type-options': 'nosniff',
+[api]     'x-error-json': 'ewogICJlcnJvciI6IHsKICAgICJtZXNzYWdlIjogIkluY29ycmVjdCBBUEkga2V5IHByb3ZpZGVkOiBzay0uLi4uIFlvdSBjYW4gZmluZCB5b3VyIEFQSSBrZXkgYXQgaHR0cHM6Ly9wbGF0Zm9ybS5vcGVuYWkuY29tL2FjY291bnQvYXBpLWtleXMuIiwKICAgICJ0eXBlIjogImludmFsaWRfcmVxdWVzdF9lcnJvciIsCiAgICAiY29kZSI6ICJpbnZhbGlkX2FwaV9rZXkiLAogICAgInBhcmFtIjogbnVsbAogIH0sCiAgInN0YXR1cyI6IDQwMQp9',
+[api]     'x-openai-authorization-error': '401',
+[api]     'x-openai-ide-error-code': 'invalid_api_key',
+[api]     'x-openai-internal-caller': 'unknown_through_ide',
+[api]     'x-request-id': 'req_eb2a081b669d4c158a6e7c5766f106f2',
+[api]     'set-cookie': '__cf_bm=D645BSnKvCN6xm2t5N12NqLBjnOxbRd9JLXIEVRUS0k-1786211474.2597723-1.0.1.1-x5f1lyU_FeBxDR75nphug8nmEaQnfrQ7AMe1jya8JHyf_kvNbLsXMDMZEmFpbRtpSsuesJHm6DqBHBs8BL5LxFbuisUz1qf4A6hDM_g81MaSph_K2JAOa8Q6xZ5tKTUn; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sat, 08 Aug 2026 18:21:14 GMT',
+[api]     'alt-svc': 'h3=":443"; ma=86400'
+[api]   },
+[api]   requestID: 'req_eb2a081b669d4c158a6e7c5766f106f2',
+[api]   error: {
+[api]     message: 'Incorrect API key provided: sk-.... You can find your API key at https://platform.openai.com/account/api-keys.',
+[api]     type: 'invalid_request_error',
+[api]     code: 'invalid_api_key',
+[api]     param: null
+[api]   },
+[api]   code: 'invalid_api_key',
+[api]   param: null,
+[api]   type: 'invalid_request_error'
+[api] }
+[api] [12:51:22.682] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 4,
+[api]       "method": "POST",
+[api]       "url": "/api/cards/batch-analyze"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 70
+[api] [12:51:22.703] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 5,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/bacde987-b66f-473a-bb9a-c26daff1bdbb/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 1
+[api] [12:51:23.727] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 6,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/bacde987-b66f-473a-bb9a-c26daff1bdbb/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 0
+[api] [12:51:24.757] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 7,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/bacde987-b66f-473a-bb9a-c26daff1bdbb/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [12:51:26.054] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 8,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [12:51:26.116] INFO (13972): request completed
+[api]     req: {
+[api]       "id": 9,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 20
