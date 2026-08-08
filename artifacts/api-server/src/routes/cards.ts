@@ -596,6 +596,8 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
 
     // eBay File Exchange header — the action column encodes metadata
     const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";
+    const location = process.env.EBAY_LOCATION ?? "";
+
     const columns = [
       ACTION_HEADER,
       "*Category",
@@ -606,6 +608,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "*Duration",
       "ConditionID",
       "Description",
+      "Location",
       "ShippingType",
       "ShippingService-1:Option",
       "ShippingService-1:Cost",
@@ -625,6 +628,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "GTC",                           // Duration (Good Till Cancelled)
       conditionId(card.quality),       // ConditionID
       makeDescription(card),           // Description
+      location,                        // Location (required by eBay)
       "Flat",                          // ShippingType
       "USPSFirstClass",                // ShippingService
       SHIPPING_COST.toFixed(2),        // Shipping cost to buyer
