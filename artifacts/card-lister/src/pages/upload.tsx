@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Shell } from "@/components/layout/shell";
-import { UploadCloud, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { UploadCloud, X, Loader2, CheckCircle2, AlertCircle, ArrowLeftRight } from "lucide-react";
 import { useBatchAnalyzeCards, useGetBatchProgress } from "@workspace/api-client-react";
 import { Link } from "wouter";
 
@@ -62,6 +62,16 @@ export default function UploadPage() {
     setImages(prev => {
       const next = prev.filter(img => img.id !== id);
       setOddWarning(next.length % 2 !== 0);
+      return next;
+    });
+  };
+
+  const swapPair = (pairIndex: number) => {
+    setImages(prev => {
+      const next = [...prev];
+      const a = pairIndex * 2;
+      const b = pairIndex * 2 + 1;
+      if (b < next.length) [next[a], next[b]] = [next[b], next[a]];
       return next;
     });
   };
@@ -174,7 +184,14 @@ export default function UploadPage() {
                     <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[56px]">{pair.front.file.name}</span>
                   </div>
 
-                  <span className="text-muted-foreground text-lg">+</span>
+                  <button
+                    onClick={() => swapPair(i)}
+                    title="Swap front and back"
+                    className="flex flex-col items-center gap-1 px-2 py-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowLeftRight className="w-4 h-4" />
+                    <span className="text-[9px] font-mono">swap</span>
+                  </button>
 
                   {/* Back */}
                   <div className="flex flex-col items-center gap-1">
