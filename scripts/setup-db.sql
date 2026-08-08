@@ -7,7 +7,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE card_status AS ENUM ('pending', 'reviewed', 'listed');
+  CREATE TYPE card_status AS ENUM ('pending', 'reviewed', 'listed', 'sold');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
@@ -57,6 +57,9 @@ ALTER TABLE cards ADD COLUMN IF NOT EXISTS needs_price_review BOOLEAN NOT NULL D
 -- Migration: add sale_price and sold_at columns to track actual sale amounts
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS sale_price REAL;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS sold_at TIMESTAMP;
+
+-- Migration: add 'sold' value to card_status enum
+ALTER TYPE card_status ADD VALUE IF NOT EXISTS 'sold';
 
 -- Import jobs table (tracks background CSV import progress)
 CREATE TABLE IF NOT EXISTS import_jobs (

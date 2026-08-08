@@ -20,6 +20,7 @@ export const cardStatusEnum = pgEnum("card_status", [
   "pending",
   "reviewed",
   "listed",
+  "sold",
 ]);
 
 export const cardsTable = pgTable("cards", {
