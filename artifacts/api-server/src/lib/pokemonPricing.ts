@@ -111,13 +111,12 @@ export async function fetchTcgMarketPrice(card: {
       return data.data;
     };
 
-    // Try name+number, then name-only as fallback
+    // Use name+number only — name-only fallback risks matching a card from the wrong set
+    // (e.g. "Pikachu" name-only returns Base Set instead of Destined Rivals)
     const safeCardName = cardName ? sanitizeQueryTerm(cardName) : null;
     const nameAndNumber = safeCardName && numStr ? `name:"${safeCardName}" number:"${numStr}"` : null;
-    const nameOnly = safeCardName ? `name:"${safeCardName}"` : null;
 
     let results = nameAndNumber ? await tryQuery(nameAndNumber) : null;
-    if (!results?.length && nameOnly) results = await tryQuery(nameOnly);
 
     if (!results?.length) {
       return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no results" };
