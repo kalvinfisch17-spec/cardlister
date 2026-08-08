@@ -96,6 +96,7 @@ Use null for any field you cannot determine with confidence.`;
     // Strip any accidental markdown fencing
     const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned) as CardAnalysisData;
+    console.log(`[cardAnalysis] AI result: name="${parsed.cardName}" set="${parsed.setName}" number="${parsed.cardNumber}" year="${parsed.year}" holo="${parsed.holoType}"`);
     return {
       cardName: parsed.cardName ?? null,
       setName: parsed.setName ?? null,

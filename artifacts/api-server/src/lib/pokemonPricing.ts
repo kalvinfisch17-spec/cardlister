@@ -94,6 +94,7 @@ export async function fetchTcgMarketPrice(card: {
 
     const query = parts.join(" ");
     const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=5&select=id,name,number,set,tcgplayer`;
+    console.log(`[pokemonPricing] query: ${query}`);
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (process.env.POKEMON_TCG_API_KEY) {
@@ -101,16 +102,23 @@ export async function fetchTcgMarketPrice(card: {
     }
 
     const res = await fetch(url, { headers });
-    if (!res.ok) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: `API error ${res.status}` };
+    if (!res.ok) {
+      console.log(`[pokemonPricing] API error ${res.status}`);
+      return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: `API error ${res.status}` };
+    }
 
     const data = (await res.json()) as { data: TcgCard[] };
-    if (!data.data?.length) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no results" };
+    if (!data.data?.length) {
+      console.log(`[pokemonPricing] no results for query: ${query}`);
+      return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no results" };
+    }
 
     // Use the first result — most specific query wins
     const match = data.data[0];
     const price = match.tcgplayer?.prices ? pickPrice(match.tcgplayer.prices, card.holoType) : null;
     // Extract year from releaseDate (format: "YYYY/MM/DD")
     const matchedYear = match.set?.releaseDate ? match.set.releaseDate.split("/")[0] : null;
+    console.log(`[pokemonPricing] matched: ${match.name} | ${match.set?.name} | ${match.set?.releaseDate} | price: ${price}`);
     return {
       marketPrice: price,
       matchedCardName: match.name ?? null,
@@ -118,7 +126,8 @@ export async function fetchTcgMarketPrice(card: {
       matchedYear,
       source: `TCGPlayer (${match.name} ${match.set?.name ?? ""})`,
     };
-  } catch {
+  } catch (err) {
+    console.log(`[pokemonPricing] fetch failed:`, err);
     return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "fetch failed" };
   }
 }
