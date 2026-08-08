@@ -1,0 +1,357 @@
+[api] [13:46:21.308] INFO (17812): Server listening
+[api]     port: 5001
+[api] [13:46:25.105] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 2,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 29
+[api] [13:46:25.183] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 1,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 114
+[api] [13:47:20.142] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 4,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 27
+[api] [13:47:20.224] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 3,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 110
+[api] [13:47:21.997] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 5,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [13:47:22.063] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 6,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 66
+[api] [13:47:23.788] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 7,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [13:47:39.937] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 8,
+[api]       "method": "POST",
+[api]       "url": "/api/cards/batch-analyze"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 99
+[api] [13:47:39.961] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 9,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 1
+[api] [13:47:40.977] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 10,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:42.008] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 11,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [cardAnalysis] AI result: name="Arven's Maschiff" set="null" number="138/182" year="2025" holo="standard"
+[api] [pokemonPricing] query: name:"Arven's Maschiff" number:"138" set.total:182
+[api] [pokemonPricing] API error 500
+[api] [13:47:43.030] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 12,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 1
+[api] [13:47:44.067] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 13,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [cardAnalysis] AI result: name="Arrokuda" set="Scarlet & Violet" number="062/182" year="2025" holo="standard"
+[api] [pokemonPricing] query: name:"Arrokuda" number:"062" set.total:182 set.name:"Scarlet & Violet"
+[api] [pokemonPricing] API error 500
+[api] [13:47:45.097] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 14,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 1
+[api] [13:47:46.127] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 15,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:47.155] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 16,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:48.190] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 17,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:49.218] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 18,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:50.248] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 19,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:51.281] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 20,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:52.316] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 21,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:53.351] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 22,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:54.376] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 23,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:55.395] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 24,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:56.418] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 25,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:57.451] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 26,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [13:47:58.489] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 27,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:47:59.510] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 28,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:48:00.540] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 29,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:48:01.565] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 30,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:48:02.596] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 31,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:48:03.622] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 32,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:48:04.660] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 33,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/d58f46c8-69c6-4e12-bc8a-f0c66c2fa0e4/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:48:05.626] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 34,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 26
+[api] [13:48:05.715] INFO (17812): request completed
+[api]     req: {
+[api]       "id": 35,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }

@@ -68,6 +68,11 @@ function cleanSetName(name: string): string {
   return name.replace(/^[A-Z]{1,5}\d{1,3}[a-z]?:\s+/, "").trim();
 }
 
+/** Remove characters that break pokemontcg.io's Lucene query parser (apostrophes, quotes, etc.) */
+function sanitizeQueryTerm(term: string): string {
+  return term.replace(/['"']/g, "").replace(/[+\-!(){}\[\]^~*?:\\/]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export async function fetchTcgMarketPrice(card: {
   cardName?: string | null;
   setName?: string | null;
@@ -79,42 +84,54 @@ export async function fetchTcgMarketPrice(card: {
     const cardName = card.cardName ? cleanCardName(card.cardName) : null;
     const setName = card.setName ? cleanSetName(card.setName) : null;
 
-    // Build query — more specific = better match
-    const parts: string[] = [];
-    if (cardName) parts.push(`name:"${cardName.replace(/"/g, "")}"`);
+    // Build query parts — sanitize names to avoid breaking the Lucene parser
+    let numStr: string | null = null;
+    let totalStr: string | null = null;
     if (card.cardNumber) {
       const [num, total] = card.cardNumber.split("/");
-      parts.push(`number:"${num.trim()}"`);
-      // The set total (e.g. 102 in "25/102") uniquely identifies the set — use it when present
-      if (total) parts.push(`set.total:${total.trim()}`);
+      numStr = String(parseInt(num.trim(), 10)); // strip leading zeros (062 → 62)
+      if (total) totalStr = total.trim();
     }
-    if (setName) parts.push(`set.name:"${setName.replace(/"/g, "")}"`);
 
-    if (parts.length === 0) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no search terms" };
-
-    const query = parts.join(" ");
-    const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=5&select=id,name,number,set,tcgplayer`;
-    console.log(`[pokemonPricing] query: ${query}`);
+    const buildQuery = (includeName: boolean, includeSetName: boolean) => {
+      const parts: string[] = [];
+      if (includeName && cardName) parts.push(`name:"${sanitizeQueryTerm(cardName)}"`);
+      if (numStr) parts.push(`number:"${numStr}"`);
+      if (totalStr) parts.push(`set.total:${totalStr}`);
+      if (includeSetName && setName) parts.push(`set.name:"${sanitizeQueryTerm(setName)}"`);
+      return parts.join(" ");
+    };
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (process.env.POKEMON_TCG_API_KEY) {
       headers["X-Api-Key"] = process.env.POKEMON_TCG_API_KEY;
     }
 
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
-      console.log(`[pokemonPricing] API error ${res.status}`);
-      return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: `API error ${res.status}` };
-    }
+    const tryQuery = async (query: string) => {
+      if (!query) return null;
+      const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=5&select=id,name,number,set,tcgplayer`;
+      console.log(`[pokemonPricing] query: ${query}`);
+      const res = await fetch(url, { headers });
+      if (!res.ok) { console.log(`[pokemonPricing] API error ${res.status} for: ${query}`); return null; }
+      const data = (await res.json()) as { data: TcgCard[] };
+      if (!data.data?.length) { console.log(`[pokemonPricing] no results for: ${query}`); return null; }
+      return data.data;
+    };
 
-    const data = (await res.json()) as { data: TcgCard[] };
-    if (!data.data?.length) {
-      console.log(`[pokemonPricing] no results for query: ${query}`);
+    if (!numStr && !cardName) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no search terms" };
+
+    // Try progressively simpler queries until one succeeds
+    const results =
+      await tryQuery(buildQuery(true, true)) ??   // full query
+      await tryQuery(buildQuery(true, false)) ??  // name + number, no set name
+      await tryQuery(buildQuery(false, false));    // number + total only (most reliable)
+
+    if (!results?.length) {
       return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no results" };
     }
 
     // Use the first result — most specific query wins
-    const match = data.data[0];
+    const match = results[0];
     const price = match.tcgplayer?.prices ? pickPrice(match.tcgplayer.prices, card.holoType) : null;
     // Extract year from releaseDate (format: "YYYY/MM/DD")
     const matchedYear = match.set?.releaseDate ? match.set.releaseDate.split("/")[0] : null;
