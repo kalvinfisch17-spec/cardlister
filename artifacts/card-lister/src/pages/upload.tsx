@@ -100,11 +100,11 @@ export default function UploadPage() {
   };
 
   const isAnalyzing = batchAnalyze.isPending || !!jobId;
-  const progressMatch = typeof progressText === "string" ? progressText.match(/(\d+)\/(\d+)/) : null;
-  const processed = progressMatch ? parseInt(progressMatch[1]) : 0;
-  const total = progressMatch ? parseInt(progressMatch[2]) : (jobId ? images.length / 2 : 0);
+  const progressData = progressText && typeof progressText === "object" ? progressText as { processed: number; total: number; done: boolean } : null;
+  const processed = progressData?.processed ?? 0;
+  const total = progressData?.total ?? (jobId ? images.length / 2 : 0);
   const percent = total > 0 ? (processed / total) * 100 : 0;
-  const isDone = jobId && processed === total && total > 0;
+  const isDone = progressData?.done ?? false;
 
   const pairs = buildPairs(images, backFirst);
   const canAnalyze = images.length > 0 && images.length % 2 === 0;

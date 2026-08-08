@@ -234,7 +234,7 @@ router.post("/cards/batch-analyze", async (req, res) => {
   res.json({ jobId, total });
 });
 
-// GET /cards/batch-analyze/:jobId/progress (SSE)
+// GET /cards/batch-analyze/:jobId/progress
 router.get("/cards/batch-analyze/:jobId/progress", (req, res) => {
   const parsed = GetBatchProgressParams.safeParse(req.params);
   if (!parsed.success) {
@@ -243,35 +243,18 @@ router.get("/cards/batch-analyze/:jobId/progress", (req, res) => {
   }
 
   const { jobId } = parsed.data;
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
+  const job = batchJobs.get(jobId);
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
 
-  const interval = setInterval(() => {
-    const job = batchJobs.get(jobId);
-    if (!job) {
-      res.write(
-        `data: ${JSON.stringify({ error: "Job not found" })}\n\n`,
-      );
-      clearInterval(interval);
-      res.end();
-      return;
-    }
-    res.write(
-      `data: ${JSON.stringify({
-        processed: job.processed,
-        total: job.total,
-        done: job.done,
-        cardIds: job.done ? job.results : undefined,
-      })}\n\n`,
-    );
-    if (job.done) {
-      clearInterval(interval);
-      res.end();
-    }
-  }, 500);
-
-  req.on("close", () => clearInterval(interval));
+  res.json({
+    processed: job.processed,
+    total: job.total,
+    done: job.done,
+    cardIds: job.done ? job.results : undefined,
+  });
 });
 
 // GET /cards
