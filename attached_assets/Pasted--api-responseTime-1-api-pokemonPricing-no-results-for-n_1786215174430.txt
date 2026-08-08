@@ -1,0 +1,79 @@
+[api]     responseTime: 1
+[api] [pokemonPricing] no results for: name:"Team Rockets Great Ball" number:"175" set.total:182
+[api] [pokemonPricing] query: number:"175" set.total:182
+[api] [pokemonPricing] no results for: number:"175" set.total:182
+[api] [13:52:21.609] INFO (23244): request completed
+[api]     req: {
+[api]       "id": 9,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/7762ffb1-05e4-41ec-8532-ac2ac972b045/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [13:52:22.643] INFO (23244): request completed
+[api]     req: {
+[api]       "id": 10,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/7762ffb1-05e4-41ec-8532-ac2ac972b045/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 1
+[api] [13:52:23.666] INFO (23244): request completed
+[api]     req: {
+[api]       "id": 11,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/7762ffb1-05e4-41ec-8532-ac2ac972b045/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [cardAnalysis] AI result: name="Dolliv" set="Scarlet & Violet" number="022/182" year="2023" holo="standard"
+[api] [pokemonPricing] query: name:"Dolliv" number:"22" set.total:182 set.name:"Scarlet & Violet"
+[api] [pokemonPricing] API error 500 for: name:"Dolliv" number:"22" set.total:182 set.name:"Scarlet & Violet"
+[api] [pokemonPricing] query: name:"Dolliv" number:"22" set.total:182
+[api] [pokemonPricing] no results for: name:"Dolliv" number:"22" set.total:182
+[api] [pokemonPricing] query: number:"22" set.total:182
+[api] [13:52:24.690] INFO (23244): request completed
+[api]     req: {
+[api]       "id": 12,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/7762ffb1-05e4-41ec-8532-ac2ac972b045/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [pokemonPricing] matched: Magneton | Aquapolis | 2003/01/15 | price: 16.45
+[api] [13:52:25.721] INFO (23244): request completed
+[api]     req: {
+[api]       "id": 13,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/7762ffb1-05e4-41ec-8532-ac2ac972b045/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 1
+[api] [13:52:26.755] INFO (23244): request completed
+[api]     req: {
+[api]       "id": 14,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/7762ffb1-05e4-41ec-8532-ac2ac972b045/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [cardAnalysis] AI result: name="Cynthia's Gabite" set="Twilight Masquerade" number="103/182" year="2025" holo="standard"
+[api] [pokemonPricing] query: name:"Cynthias Gabite" number:"103" set.total:182 set.name:"Twilight Masquerade"
+[api] [pokemonPricing] API error 500 for: name:"Cynthias Gabite" number:"103" set.total:182 set.name:"Twilight Masquerade"
+[api] [pokemonPricing] query: name:"Cynthias Gabite" number:"103" set.total:182
+[api] [pokemonPricing] API error 502 for: name:"Cynthias Gabite" number:"103" set.total:182
+[api] [pokemonPricing] query: number:"103" set.total:182
+[api] [pokemonPricing] matched: Porygon | Aquapolis | 2003/01/15 | price: null
+[api] [13:52:27.789] INFO (23244): request completed

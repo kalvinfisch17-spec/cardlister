@@ -84,23 +84,17 @@ export async function fetchTcgMarketPrice(card: {
     const cardName = card.cardName ? cleanCardName(card.cardName) : null;
     const setName = card.setName ? cleanSetName(card.setName) : null;
 
-    // Build query parts — sanitize names to avoid breaking the Lucene parser
+    // Build query parts — sanitize names to avoid breaking the Lucene parser.
+    // Do NOT use set.name (& in names like "Scarlet & Violet" breaks Lucene).
+    // Do NOT use set.total (multiple sets share the same total, causing wrong matches).
+    // name + number is specific enough: card names are unique per Pokémon per number.
     let numStr: string | null = null;
-    let totalStr: string | null = null;
     if (card.cardNumber) {
-      const [num, total] = card.cardNumber.split("/");
+      const [num] = card.cardNumber.split("/");
       numStr = String(parseInt(num.trim(), 10)); // strip leading zeros (062 → 62)
-      if (total) totalStr = total.trim();
     }
 
-    const buildQuery = (includeName: boolean, includeSetName: boolean) => {
-      const parts: string[] = [];
-      if (includeName && cardName) parts.push(`name:"${sanitizeQueryTerm(cardName)}"`);
-      if (numStr) parts.push(`number:"${numStr}"`);
-      if (totalStr) parts.push(`set.total:${totalStr}`);
-      if (includeSetName && setName) parts.push(`set.name:"${sanitizeQueryTerm(setName)}"`);
-      return parts.join(" ");
-    };
+    if (!numStr && !cardName) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no search terms" };
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (process.env.POKEMON_TCG_API_KEY) {
@@ -108,8 +102,7 @@ export async function fetchTcgMarketPrice(card: {
     }
 
     const tryQuery = async (query: string) => {
-      if (!query) return null;
-      const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=5&select=id,name,number,set,tcgplayer`;
+      const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=10&select=id,name,number,set,tcgplayer`;
       console.log(`[pokemonPricing] query: ${query}`);
       const res = await fetch(url, { headers });
       if (!res.ok) { console.log(`[pokemonPricing] API error ${res.status} for: ${query}`); return null; }
@@ -118,16 +111,23 @@ export async function fetchTcgMarketPrice(card: {
       return data.data;
     };
 
-    if (!numStr && !cardName) return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no search terms" };
+    // Try name+number, then name-only as fallback
+    const safeCardName = cardName ? sanitizeQueryTerm(cardName) : null;
+    const nameAndNumber = safeCardName && numStr ? `name:"${safeCardName}" number:"${numStr}"` : null;
+    const nameOnly = safeCardName ? `name:"${safeCardName}"` : null;
 
-    // Try progressively simpler queries until one succeeds
-    const results =
-      await tryQuery(buildQuery(true, true)) ??   // full query
-      await tryQuery(buildQuery(true, false)) ??  // name + number, no set name
-      await tryQuery(buildQuery(false, false));    // number + total only (most reliable)
+    let results = nameAndNumber ? await tryQuery(nameAndNumber) : null;
+    if (!results?.length && nameOnly) results = await tryQuery(nameOnly);
 
     if (!results?.length) {
       return { marketPrice: null, matchedCardName: null, matchedSetName: null, matchedYear: null, source: "no results" };
+    }
+
+    // When multiple results, prefer the one whose set name matches AI's identification
+    if (results.length > 1 && setName) {
+      const cleaned = cleanSetName(setName).toLowerCase();
+      const preferred = results.find(r => r.set?.name?.toLowerCase().includes(cleaned) || cleaned.includes(r.set?.name?.toLowerCase() ?? "___"));
+      if (preferred) results = [preferred, ...results.filter(r => r !== preferred)];
     }
 
     // Use the first result — most specific query wins
