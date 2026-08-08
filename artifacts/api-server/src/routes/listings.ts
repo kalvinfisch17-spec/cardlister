@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, pool } from "@workspace/db";
 import { cardsTable, listingsTable } from "@workspace/db";
-import { eq, desc, and, sum, count } from "drizzle-orm";
+import { eq, desc, and, sum, count, inArray } from "drizzle-orm";
 import {
   CreateListingBody,
   BulkCreateListingsBody,
@@ -827,6 +827,82 @@ router.get("/listings/export/ebay-csv-revise", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to export eBay Revise CSV");
     res.status(500).json({ error: "Failed to generate Revise CSV" });
+  }
+});
+
+// POST /listings/export/ebay-csv-selected
+// Generates an eBay File Exchange Add CSV for a specific set of listing IDs
+router.post("/listings/export/ebay-csv-selected", async (req, res) => {
+  const { listingIds } = req.body as { listingIds?: number[] };
+  if (!Array.isArray(listingIds) || listingIds.length === 0) {
+    res.status(400).json({ error: "listingIds must be a non-empty array" });
+    return;
+  }
+  try {
+    const rows = await db
+      .select({
+        listingId: listingsTable.id,
+        price: listingsTable.price,
+        title: listingsTable.title,
+        description: listingsTable.description,
+        cardName: cardsTable.cardName,
+        setName: cardsTable.setName,
+        cardNumber: cardsTable.cardNumber,
+        quality: cardsTable.quality,
+        holoType: cardsTable.holoType,
+        language: cardsTable.language,
+        rarity: cardsTable.rarity,
+        year: cardsTable.year,
+      })
+      .from(listingsTable)
+      .innerJoin(cardsTable, eq(listingsTable.cardId, cardsTable.id))
+      .where(inArray(listingsTable.id, listingIds));
+
+    if (rows.length === 0) {
+      res.status(404).json({ error: "No matching listings found" });
+      return;
+    }
+
+    const conditionId = (quality: string | null): number => {
+      const q = (quality ?? "").toLowerCase();
+      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return 2750;
+      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return 3000;
+      if (q.includes("moderately played") || q.includes("mp")) return 4000;
+      if (q.includes("heavily played") || q.includes("hp")) return 5000;
+      if (q.includes("damaged") || q.includes("poor")) return 7000;
+      return 3000;
+    };
+
+    const escape = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
+
+    const ACTION_HEADER = "*Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8)";
+    const columns = [
+      ACTION_HEADER, "*Category", "*Title", "*StartPrice", "*Quantity",
+      "*Format", "*Duration", "ConditionID", "Description",
+      "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
+    ];
+
+    const SHIPPING_COST = 0.78;
+    const csvRows = rows.map((row) => {
+      const card = { cardName: row.cardName, setName: row.setName, cardNumber: row.cardNumber, quality: row.quality, holoType: row.holoType, language: row.language, rarity: row.rarity, year: row.year };
+      const title = row.title ?? generateTitle(card as Parameters<typeof generateTitle>[0]);
+      const description = row.description ?? generateDescription(card as Parameters<typeof generateDescription>[0]);
+      const price = row.price ?? 0;
+      return [
+        "Add", "183454", title, price.toFixed(2), "1",
+        "FixedPrice", "GTC", conditionId(row.quality),
+        description, "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
+      ].map(escape).join(",");
+    });
+
+    const csv = [columns.map(escape).join(","), ...csvRows].join("\r\n");
+    const filename = `fischtcg-ebay-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (err) {
+    req.log.error({ err }, "Failed to export selected listings CSV");
+    res.status(500).json({ error: "Failed to generate CSV" });
   }
 });
 

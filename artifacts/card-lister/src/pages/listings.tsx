@@ -13,7 +13,9 @@ export default function ListingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [regenerating, setRegenerating] = useState(false);
-  
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [exporting, setExporting] = useState(false);
+
   const { data: listings, isLoading, refetch } = useListListings({}, { query: { queryKey: ["listings"] } });
   const deleteListing = useDeleteListing();
   const { toast } = useToast();
@@ -41,7 +43,52 @@ export default function ListingsPage() {
     }
   };
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredListings.length && filteredListings.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredListings.map(l => l.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const handleExportSelected = async () => {
+    setExporting(true);
+    try {
+      const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+      const res = await fetch(`${base}/api/listings/export/ebay-csv-selected`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingIds: Array.from(selectedIds) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Export failed" }));
+        toast({ title: "Export failed", description: err.error, variant: "destructive" });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fischtcg-ebay-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "CSV exported", description: `${selectedIds.size} listing${selectedIds.size === 1 ? "" : "s"} exported. Upload in eBay Seller Hub → File Exchange.` });
+      setSelectedIds(new Set());
+    } catch {
+      toast({ title: "Export failed", description: "Could not connect to the server.", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const showSoldColumns = statusFilter === "sold" || statusFilter === "all";
+  const colSpan = showSoldColumns ? 7 : 6;
 
   return (
     <Shell>
@@ -141,11 +188,40 @@ export default function ListingsPage() {
           </div>
         </div>
 
+        {/* Selection toolbar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-sm">
+            <span className="text-sm font-bold text-primary mr-2 font-mono">{selectedIds.size} Selected</span>
+            <button
+              onClick={handleExportSelected}
+              disabled={exporting}
+              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold rounded-sm shadow-sm hover:bg-primary/90 disabled:opacity-50"
+            >
+              {exporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+              Export to eBay CSV
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
         <div className="cockpit-panel overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-card-border bg-muted/30">
+                  <th className="py-3 px-4 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      className="rounded-sm border-input"
+                      checked={filteredListings.length > 0 && selectedIds.size === filteredListings.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground w-16">Item</th>
                   <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">Listing Title & ID</th>
                   <th className="py-3 px-4 text-left font-display font-semibold text-muted-foreground">List Price</th>
@@ -159,14 +235,14 @@ export default function ListingsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={showSoldColumns ? 6 : 5} className="py-12 text-center">
+                    <td colSpan={colSpan} className="py-12 text-center">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
                       <p className="text-muted-foreground text-sm font-mono">Syncing with eBay...</p>
                     </td>
                   </tr>
                 ) : filteredListings.length === 0 ? (
                   <tr>
-                    <td colSpan={showSoldColumns ? 6 : 5} className="py-12 text-center text-muted-foreground">
+                    <td colSpan={colSpan} className="py-12 text-center text-muted-foreground">
                       No listings found.
                     </td>
                   </tr>
@@ -174,16 +250,27 @@ export default function ListingsPage() {
                   filteredListings.map(listing => {
                     const discrepancy = getPriceDiscrepancy(listing.price, listing.salePrice);
                     const isMismatch = discrepancy !== null && Math.abs(discrepancy) > 0.1;
+                    const isSelected = selectedIds.has(listing.id);
 
                     return (
                       <tr
                         key={listing.id}
                         className={`border-b border-card-border last:border-0 transition-colors group ${
-                          isMismatch
+                          isSelected
+                            ? "bg-primary/5"
+                            : isMismatch
                             ? "bg-amber-950/20 hover:bg-amber-950/30"
                             : "hover:bg-muted/10"
                         }`}
                       >
+                        <td className="py-3 px-4 text-center">
+                          <input
+                            type="checkbox"
+                            className="rounded-sm border-input"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(listing.id)}
+                          />
+                        </td>
                         <td className="py-3 px-4">
                           <div className="w-10 h-14 bg-muted border border-border rounded-sm overflow-hidden shadow-sm">
                             {listing.card?.imageUrl ? (
