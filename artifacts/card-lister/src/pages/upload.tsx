@@ -10,13 +10,15 @@ interface CardPair {
   back: { file: File; base64: string; id: string } | null;
 }
 
-function buildPairs(files: { file: File; base64: string; id: string }[]): CardPair[] {
+function buildPairs(files: { file: File; base64: string; id: string }[], backFirst: boolean): CardPair[] {
   const pairs: CardPair[] = [];
   for (let i = 0; i < files.length; i += 2) {
+    const a = files[i];
+    const b = files[i + 1] ?? null;
     pairs.push({
-      id: files[i].id,
-      front: files[i],
-      back: files[i + 1] ?? null,
+      id: a.id,
+      front: backFirst ? (b ?? a) : a,
+      back:  backFirst ? a : b,
     });
   }
   return pairs;
@@ -26,6 +28,7 @@ export default function UploadPage() {
   const [images, setImages] = useState<{ file: File; base64: string; id: string }[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
   const [oddWarning, setOddWarning] = useState(false);
+  const [backFirst, setBackFirst] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const batchAnalyze = useBatchAnalyzeCards();
@@ -83,7 +86,7 @@ export default function UploadPage() {
 
   const startAnalysis = () => {
     if (images.length === 0 || images.length % 2 !== 0) return;
-    const pairs = buildPairs(images);
+    const pairs = buildPairs(images, backFirst);
     batchAnalyze.mutate({
       data: {
         images: pairs.map(pair => ({
@@ -103,7 +106,7 @@ export default function UploadPage() {
   const percent = total > 0 ? (processed / total) * 100 : 0;
   const isDone = jobId && processed === total && total > 0;
 
-  const pairs = buildPairs(images);
+  const pairs = buildPairs(images, backFirst);
   const canAnalyze = images.length > 0 && images.length % 2 === 0;
 
   return (
@@ -136,10 +139,16 @@ export default function UploadPage() {
               <UploadCloud className="w-8 h-8" />
             </div>
             <h3 className="font-display font-bold text-xl mb-1">Click or drag images here</h3>
-            <p className="text-sm text-muted-foreground mb-3">Upload in pairs: photo 1 = front, photo 2 = back, photo 3 = next card front…</p>
-            <div className="flex gap-6 text-xs font-mono text-muted-foreground border border-border rounded px-4 py-2">
-              <span>📸 Odd photos → <span className="text-primary font-bold">Front</span></span>
-              <span>📸 Even photos → <span style={{color: "hsl(272 85% 65%)"}}>Back</span></span>
+            <p className="text-sm text-muted-foreground mb-3">Upload in pairs — odd photo is front, even photo is back</p>
+            <div
+              onClick={e => { e.stopPropagation(); setBackFirst(v => !v); }}
+              className="flex items-center gap-3 text-xs font-mono border border-border rounded px-4 py-2 cursor-pointer hover:bg-muted/50 transition-colors select-none"
+            >
+              <span className={backFirst ? "text-muted-foreground" : "text-primary font-bold"}>Front first</span>
+              <div className="relative w-8 h-4 rounded-full transition-colors" style={{background: backFirst ? "hsl(272 85% 60%)" : "hsl(225 100% 58%)"}}>
+                <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all" style={{left: backFirst ? "17px" : "2px"}} />
+              </div>
+              <span className={backFirst ? "font-bold" : "text-muted-foreground"} style={backFirst ? {color: "hsl(272 85% 65%)"} : {}}>Back first</span>
             </div>
           </div>
         )}
