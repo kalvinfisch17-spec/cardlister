@@ -17,6 +17,7 @@ import {
   generateDescription,
 } from "../lib/ebay";
 import { fetchSuggestedPrice } from "../lib/pricing";
+import { fetchTcgImageUrl } from "../lib/pokemonPricing";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -889,6 +890,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
     const rows = await db
       .select({
         listingId: listingsTable.id,
+        cardId: cardsTable.id,
         price: listingsTable.price,
         title: listingsTable.title,
         description: listingsTable.description,
@@ -930,6 +932,15 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       "*Format", "*Duration", "ConditionID", "Description", "PicURL", "Location",
       "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
     ];
+
+    // Backfill image URLs for any cards missing them
+    await Promise.all(rows.filter(r => !r.tcgImageUrl).map(async (row) => {
+      const url = await fetchTcgImageUrl({ cardName: row.cardName, cardNumber: row.cardNumber });
+      if (url) {
+        row.tcgImageUrl = url;
+        await db.update(cardsTable).set({ tcgImageUrl: url, updatedAt: new Date() }).where(eq(cardsTable.id, row.cardId));
+      }
+    }));
 
     const SHIPPING_COST = 0.78;
     const csvRows = rows.map((row) => {

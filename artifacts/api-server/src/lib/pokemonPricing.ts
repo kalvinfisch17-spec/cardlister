@@ -76,6 +76,34 @@ function sanitizeQueryTerm(term: string): string {
   return term.replace(/["""]/g, "").replace(/[&+!(){}\[\]^~*?:\\/]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/** Fetch just the pokemontcg.io card image URL (large preferred, small fallback).
+ *  Used at CSV export time to backfill cards that were priced before image storage was added. */
+export async function fetchTcgImageUrl(card: {
+  cardName?: string | null;
+  cardNumber?: string | null;
+}): Promise<string | null> {
+  try {
+    const cardName = card.cardName ? cleanCardName(card.cardName) : null;
+    let numStr: string | null = null;
+    if (card.cardNumber) {
+      const [num] = card.cardNumber.split("/");
+      numStr = String(parseInt(num.trim(), 10));
+    }
+    if (!cardName || !numStr) return null;
+    const safeCardName = sanitizeQueryTerm(cardName);
+    const query = `name:"${safeCardName}" number:"${numStr}"`;
+    const headers: Record<string, string> = {};
+    if (process.env.POKEMON_TCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMON_TCG_API_KEY;
+    const url = `${BASE_URL}/cards?q=${encodeURIComponent(query)}&pageSize=1&select=id,name,number,images`;
+    let res = await fetch(url, { headers });
+    if (res.status >= 500) { await new Promise(r => setTimeout(r, 600)); res = await fetch(url, { headers }); }
+    if (!res.ok) return null;
+    const data = (await res.json()) as { data: TcgCard[] };
+    const match = data.data?.[0];
+    return match?.images?.large ?? match?.images?.small ?? null;
+  } catch { return null; }
+}
+
 export async function fetchTcgMarketPrice(card: {
   cardName?: string | null;
   setName?: string | null;

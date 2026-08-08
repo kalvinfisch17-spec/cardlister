@@ -16,6 +16,7 @@ import {
 } from "@workspace/api-zod";
 import { analyzeCardImage } from "../lib/cardAnalysis";
 import { fetchSuggestedPrice, EBAY_FVF_RATE, SHIPPING_COST } from "../lib/pricing";
+import { fetchTcgImageUrl } from "../lib/pokemonPricing";
 import { generateDescription, generateTitle } from "../lib/ebay";
 import { randomUUID } from "crypto";
 
@@ -619,6 +620,18 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
 
     const escape = (val: string | number) =>
       `"${String(val).replace(/"/g, '""')}"`;
+
+    // Backfill image URLs for any cards missing them (scanned before this feature was added)
+    const missingImage = cards.filter(c => !c.tcgImageUrl);
+    if (missingImage.length > 0) {
+      await Promise.all(missingImage.map(async (card) => {
+        const url = await fetchTcgImageUrl({ cardName: card.cardName, cardNumber: card.cardNumber });
+        if (url) {
+          card.tcgImageUrl = url;
+          await db.update(cardsTable).set({ tcgImageUrl: url, updatedAt: new Date() }).where(eq(cardsTable.id, card.id));
+        }
+      }));
+    }
 
     const rows = cards.map((card) => [
       "Add",                           // Action
