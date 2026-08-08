@@ -107,6 +107,29 @@ export default function CardsPage() {
     }
   };
 
+  const handleRepriceSelected = async () => {
+    setRepricing(true);
+    try {
+      const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+      const res = await fetch(`${base}/api/cards/reprice-selected`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardIds: Array.from(selectedIds) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ title: "Reprice failed", description: data.error ?? "Server error", variant: "destructive" });
+      } else {
+        toast({ title: "Re-pricing started", description: `Fetching prices for ${data.total} card${data.total === 1 ? "" : "s"} in the background.` });
+        setSelectedIds(new Set());
+      }
+    } catch {
+      toast({ title: "Reprice failed", description: "Could not connect to the server.", variant: "destructive" });
+    } finally {
+      setRepricing(false);
+    }
+  };
+
   const handleBulkList = () => {
     bulkCreate.mutate({
       data: { cardIds: Array.from(selectedIds) }
@@ -194,6 +217,14 @@ export default function CardsPage() {
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-sm">
               <span className="text-sm font-bold text-primary mr-2 font-mono">{selectedIds.size} Selected</span>
+              <button
+                onClick={handleRepriceSelected}
+                disabled={repricing}
+                className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-3 py-1 text-xs font-semibold rounded-sm shadow-sm hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {repricing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                Re-price
+              </button>
               <button 
                 onClick={handleBulkList}
                 className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold rounded-sm shadow-sm hover:bg-primary/90"

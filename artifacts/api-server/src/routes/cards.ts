@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { cardsTable, listingsTable } from "@workspace/db";
-import { eq, desc, and, like, or, sql, count } from "drizzle-orm";
+import { eq, desc, and, like, or, sql, count, inArray } from "drizzle-orm";
 import {
   AnalyzeCardBody,
   BatchAnalyzeCardsBody,
@@ -512,6 +512,53 @@ router.post("/cards/reprice-all", async (req, res) => {
     })();
   } catch (err) {
     req.log.error({ err }, "Failed to start reprice-all");
+    res.status(500).json({ error: "Failed to start repricing" });
+  }
+});
+
+// POST /cards/reprice-selected
+// Re-prices a specific set of cards by ID
+router.post("/cards/reprice-selected", async (req, res) => {
+  const { cardIds } = req.body as { cardIds?: number[] };
+  if (!Array.isArray(cardIds) || cardIds.length === 0) {
+    res.status(400).json({ error: "cardIds must be a non-empty array" });
+    return;
+  }
+  try {
+    const cards = await db
+      .select({ id: cardsTable.id, cardName: cardsTable.cardName, setName: cardsTable.setName, cardNumber: cardsTable.cardNumber, holoType: cardsTable.holoType })
+      .from(cardsTable)
+      .where(inArray(cardsTable.id, cardIds));
+
+    res.json({ started: true, total: cards.length });
+
+    (async () => {
+      const CONCURRENCY = 3;
+      for (let i = 0; i < cards.length; i += CONCURRENCY) {
+        const batch = cards.slice(i, i + CONCURRENCY);
+        await Promise.all(batch.map(async (card) => {
+          try {
+            const pricing = await fetchSuggestedPrice(card);
+            if (pricing.suggestedPrice !== null) {
+              await db.update(cardsTable).set({
+                suggestedPrice: pricing.suggestedPrice,
+                needsPriceReview: false,
+                updatedAt: new Date(),
+              }).where(eq(cardsTable.id, card.id));
+              await db.update(listingsTable).set({
+                price: pricing.suggestedPrice,
+                updatedAt: new Date(),
+              }).where(eq(listingsTable.cardId, card.id));
+            }
+          } catch { /* skip card on error */ }
+        }));
+        if (i + CONCURRENCY < cards.length) {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      }
+    })();
+  } catch (err) {
+    req.log.error({ err }, "Failed to start reprice-selected");
     res.status(500).json({ error: "Failed to start repricing" });
   }
 });
