@@ -1,0 +1,280 @@
+[api] ⚡ Done in 212ms
+[api] $ node --enable-source-maps --env-file-if-exists=../../.env ./dist/index.mjs
+[api] [13:01:10.809] INFO (21040): Server listening
+[api]     port: 5001
+[api] [13:01:15.905] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 2,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 30
+[api] [13:01:16.026] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 1,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 158
+[api] [13:01:17.753] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 3,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [13:01:17.759] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 4,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/stats"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 7
+[api] [13:01:17.787] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 5,
+[api]       "method": "GET",
+[api]       "url": "/api/listings/stats"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 35
+[api] [13:01:19.356] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 6,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [13:01:28.113] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 7,
+[api]       "method": "POST",
+[api]       "url": "/api/cards/batch-analyze"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 75
+[api] [13:01:28.137] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 8,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/5cd69348-70fe-4d4f-8b45-f292d1ff19e7/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 0
+[api] [13:01:29.161] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 9,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/5cd69348-70fe-4d4f-8b45-f292d1ff19e7/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 1
+[api] [13:01:30.192] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 10,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/5cd69348-70fe-4d4f-8b45-f292d1ff19e7/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:01:31.219] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 11,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/5cd69348-70fe-4d4f-8b45-f292d1ff19e7/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [cardAnalysis] AI call failed: RateLimitError: 429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.
+[api]     at _APIError.generate (C:\Users\Kalvi\cardlister\node_modules\.pnpm\openai@6.49.0_zod@3.25.76\node_modules\openai\src\core\error.ts:97:14)
+[api]     at OpenAI.makeStatusError (C:\Users\Kalvi\cardlister\node_modules\.pnpm\openai@6.49.0_zod@3.25.76\node_modules\openai\src\client.ts:636:28)
+[api]     at OpenAI.makeRequest (C:\Users\Kalvi\cardlister\node_modules\.pnpm\openai@6.49.0_zod@3.25.76\node_modules\openai\src\client.ts:932:24)
+[api]     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[api]     at async analyzeCardImage (C:\Users\Kalvi\cardlister\artifacts\api-server\src\lib\cardAnalysis.ts:67:22)
+[api]     at async <anonymous> (C:\Users\Kalvi\cardlister\artifacts\api-server\src\routes\cards.ts:196:26) {
+[api]   status: 429,
+[api]   headers: Headers {
+[api]     date: 'Sat, 08 Aug 2026 18:01:23 GMT',
+[api]     'content-type': 'application/json; charset=utf-8',
+[api]     'content-length': '283',
+[api]     connection: 'keep-alive',
+[api]     'cf-ray': 'a2806d0cef0fa1fb-MSP',
+[api]     'cf-cache-status': 'DYNAMIC',
+[api]     server: 'cloudflare',
+[api]     'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+[api]     vary: 'Origin',
+[api]     'access-control-expose-headers': 'CF-Ray, CF-Ray',
+[api]     'x-content-type-options': 'nosniff',
+[api]     'x-openai-proxy-wasm': 'v0.1',
+[api]     'x-request-id': 'req_7f742929a20b40258b4963ffd6d91059',
+[api]     'set-cookie': '__cf_bm=krxh_ABaYmpoRpp3YGq.nhdPuyjezoZ6y3nzcRPS0Po-1786212082.7038262-1.0.1.1-2WM_iYekJwysMdnbdxIC4dOJYuakefzLx05scYeKGXwguaaAUb_XuHdj_0dqRyqeTvcm3IbAdaZgcotXUT0cQdwWV710iozUBm95lSum2lLDw7QWHmdP9YLmGymJiQsf; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com; Expires=Sat, 08 Aug 2026 18:31:23 GMT',
+[api]     'alt-svc': 'h3=":443"; ma=86400'
+[api]   },
+[api]   requestID: 'req_7f742929a20b40258b4963ffd6d91059',
+[api]   error: {
+[api]     message: 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.',
+[api]     type: 'insufficient_quota',
+[api]     param: null,
+[api]     code: 'credit_balance_exhausted'
+[api]   },
+[api]   code: 'credit_balance_exhausted',
+[api]   param: null,
+[api]   type: 'insufficient_quota'
+[api] }
+[api] [13:01:32.239] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 12,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/5cd69348-70fe-4d4f-8b45-f292d1ff19e7/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 0
+[api] [13:01:33.255] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 13,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/batch-analyze/5cd69348-70fe-4d4f-8b45-f292d1ff19e7/progress"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 0
+[api] [13:01:34.384] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 14,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [13:01:34.443] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 15,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 17
+[api] [13:01:40.189] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 16,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 2
+[api] [13:01:40.225] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 18,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1823"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 37
+[api] [13:01:40.227] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 17,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1823/pricing"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 40
+[api] [13:01:42.949] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 19,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1823/description-preview"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 200
+[api]     }
+[api]     responseTime: 4
+[api] [13:02:14.720] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 20,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 31
+[api] [13:02:14.723] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 21,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1823/pricing"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 32
+[api] [13:02:14.733] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 22,
+[api]       "method": "GET",
+[api]       "url": "/api/cards/1823"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 41
+[api] [13:02:16.644] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 23,
+[api]       "method": "GET",
+[api]       "url": "/api/ebay/status"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 3
+[api] [13:02:16.683] INFO (21040): request completed
+[api]     req: {
+[api]       "id": 24,
+[api]       "method": "GET",
+[api]       "url": "/api/cards"
+[api]     }
+[api]     res: {
+[api]       "statusCode": 304
+[api]     }
+[api]     responseTime: 38
