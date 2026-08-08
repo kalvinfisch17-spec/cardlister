@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, UploadCloud, Library, List, Settings, Activity, FileInput } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Library, List, Settings, Activity, FileInput, PackageCheck } from "lucide-react";
 import { useGetEbayStatus } from "@workspace/api-client-react";
 
 export function Sidebar() {
@@ -12,6 +12,7 @@ export function Sidebar() {
     { href: "/cards", label: "Card Collection", icon: Library },
     { href: "/listings", label: "Listings", icon: List },
     { href: "/import", label: "Import from eBay", icon: FileInput },
+    { href: "/import-sold", label: "Import Sold Orders", icon: PackageCheck },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
 

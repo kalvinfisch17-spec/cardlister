@@ -11,6 +11,7 @@ import CardDetailPage from "./pages/cards/detail";
 import ListingsPage from "./pages/listings";
 import ImportPage from "./pages/import";
 import SettingsPage from "./pages/settings";
+import ImportSoldPage from "./pages/import-sold";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/listings" component={ListingsPage} />
       <Route path="/import" component={ImportPage} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/import-sold" component={ImportSoldPage} />
       <Route component={NotFound} />
     </Switch>
   );

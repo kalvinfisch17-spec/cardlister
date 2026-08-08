@@ -828,6 +828,87 @@ router.get("/listings/export/ebay-csv-revise", async (req, res) => {
   }
 });
 
+// POST /listings/import/ebay-sold-csv
+// Accepts an eBay Seller Hub orders CSV and marks matched listings as sold
+router.post("/listings/import/ebay-sold-csv", async (req, res) => {
+  try {
+    const { csvContent } = req.body ?? {};
+    if (!csvContent || typeof csvContent !== "string") {
+      res.status(400).json({ error: "csvContent is required" });
+      return;
+    }
+
+    const { rows, detectedHeaders } = parseCsv(csvContent);
+    if (rows.length === 0) {
+      const headerSample = detectedHeaders.slice(0, 10).join(", ") || "(none detected)";
+      res.status(400).json({ error: `No rows found. Detected headers: [${headerSample}]` });
+      return;
+    }
+
+    let matched = 0;
+    let skipped = 0;
+    let alreadySold = 0;
+    let totalRevenue = 0;
+
+    for (const row of rows) {
+      const itemId = getField(row,
+        "item number", "item id", "itemid", "item no", "listing id", "ebay item number"
+      );
+      const soldForRaw = getField(row,
+        "sold for", "unit price", "sale price", "start price", "earned", "total price"
+      );
+      const dateRaw = getField(row,
+        "paid on date", "order date", "payment date", "date paid", "sale date"
+      );
+
+      if (!itemId) { skipped++; continue; }
+
+      const soldPrice = soldForRaw ? parseFloat(soldForRaw.replace(/[^0-9.]/g, "")) : null;
+      const soldAt = dateRaw ? new Date(dateRaw) : new Date();
+
+      // Find the listing by ebay_listing_id
+      const existing = await pool.query<{ id: number; status: string }>(
+        `SELECT id, status FROM listings WHERE ebay_listing_id = $1 LIMIT 1`,
+        [itemId.trim()]
+      );
+
+      if (existing.rows.length === 0) { skipped++; continue; }
+
+      const listing = existing.rows[0];
+      if (listing.status === "sold") { alreadySold++; continue; }
+
+      // Mark listing as sold
+      await pool.query(
+        `UPDATE listings SET status = 'sold', updated_at = NOW() WHERE id = $1`,
+        [listing.id]
+      );
+
+      // Mark the associated card as sold too
+      await pool.query(
+        `UPDATE cards SET status = 'sold' WHERE id = (
+           SELECT card_id FROM listings WHERE id = $1 LIMIT 1
+         )`,
+        [listing.id]
+      );
+
+      matched++;
+      if (soldPrice && !isNaN(soldPrice)) totalRevenue += soldPrice;
+    }
+
+    res.json({
+      matched,
+      skipped,
+      alreadySold,
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
+      total: rows.length,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    req.log.error({ err }, "Failed to import sold orders CSV");
+    res.status(500).json({ error: `Server error: ${msg}` });
+  }
+});
+
 // DELETE /listings/:id
 router.delete("/listings/:id", async (req, res) => {
   const parsed = DeleteListingParams.safeParse(req.params);
