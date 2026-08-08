@@ -5,3 +5,4 @@
 - [Drizzle raw SQL fallback](drizzle-raw-sql.md) — Drizzle ORM parameter binding generates malformed SQL ($6 duplicated) for certain tables on some versions; use pool.query() raw SQL as fallback.
 - [Local dev DATABASE_URL](local-dev-env.md) — user's local API server reads ../../.env; must contain DATABASE_URL=postgresql://postgres:PASSWORD@localhost:5432/cardlister.
 - [setup-db.sql task agent gap](setup-db-task-agent-gap.md) — task agents add DB schema files but often forget to update setup-db.sql; always check after merges.
+- [pokemontcg.io query rules](pokemontcg-query.md) — never use set.name or set.total in queries; keep apostrophes; retry once on 5xx; TCGPlayer result always overrides AI for set/year.
