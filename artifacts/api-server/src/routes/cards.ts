@@ -580,15 +580,16 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       return;
     }
 
-    // eBay condition IDs for trading cards
-    const conditionId = (quality: string | null): number => {
+    // All raw/ungraded cards use ConditionID 4000 (Ungraded) on eBay.
+    // The visual condition is expressed via CD:Card Condition.
+    const cardCondition = (quality: string | null): string => {
       const q = (quality ?? "").toLowerCase();
-      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return 2750;
-      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return 3000;
-      if (q.includes("moderately played") || q.includes("mp")) return 4000;
-      if (q.includes("heavily played") || q.includes("hp")) return 5000;
-      if (q.includes("damaged") || q.includes("poor")) return 7000;
-      return 3000; // default: Very Good
+      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return "Near mint or better";
+      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return "Lightly played (Excellent)";
+      if (q.includes("moderately played") || q.includes("mp")) return "Moderately played (Very good)";
+      if (q.includes("heavily played") || q.includes("hp")) return "Heavily played (Poor)";
+      if (q.includes("damaged") || q.includes("poor")) return "Heavily played (Poor)";
+      return "Near mint or better"; // default
     };
 
     // Use the canonical generators so "Export to eBay CSV" and "Preview Description"
@@ -618,6 +619,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "ShippingService-1:Cost",
       "ReturnsAcceptedOption",
       "C:Game",
+      "CD:Card Condition",
     ];
 
     const escape = (val: string | number) =>
@@ -643,7 +645,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "1",                             // Quantity
       "FixedPrice",                    // Format
       "GTC",                           // Duration (Good Till Cancelled)
-      conditionId(card.quality),       // ConditionID
+      4000,                            // ConditionID: Ungraded (raw card)
       makeDescription(card),           // Description
       card.tcgImageUrl ?? "",          // PicURL (pokemontcg.io high-res image)
       location,                        // Location (required by eBay)
@@ -653,6 +655,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       SHIPPING_COST.toFixed(2),        // Shipping cost to buyer
       "ReturnsNotAccepted",            // Returns
       "Pokémon",                       // C:Game
+      cardCondition(card.quality),     // CD:Card Condition
     ].map(escape).join(","));
 
     const csv = [columns.map(escape).join(","), ...rows].join("\r\n");

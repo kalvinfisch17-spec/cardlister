@@ -913,14 +913,16 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       return;
     }
 
-    const conditionId = (quality: string | null): number => {
+    // All raw/ungraded cards use ConditionID 4000 (Ungraded) on eBay.
+    // The visual condition is expressed via CD:Card Condition.
+    const cardCondition = (quality: string | null): string => {
       const q = (quality ?? "").toLowerCase();
-      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return 2750;
-      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return 3000;
-      if (q.includes("moderately played") || q.includes("mp")) return 4000;
-      if (q.includes("heavily played") || q.includes("hp")) return 5000;
-      if (q.includes("damaged") || q.includes("poor")) return 7000;
-      return 3000;
+      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return "Near mint or better";
+      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return "Lightly played (Excellent)";
+      if (q.includes("moderately played") || q.includes("mp")) return "Moderately played (Very good)";
+      if (q.includes("heavily played") || q.includes("hp")) return "Heavily played (Poor)";
+      if (q.includes("damaged") || q.includes("poor")) return "Heavily played (Poor)";
+      return "Near mint or better";
     };
 
     const escape = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
@@ -932,7 +934,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       "*Format", "*Duration", "ConditionID", "Description", "PicURL", "Location",
       "DispatchTimeMax",
       "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
-      "C:Game",
+      "C:Game", "CD:Card Condition",
     ];
 
     // Backfill image URLs for any cards missing them
@@ -961,11 +963,11 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       const price = row.price ?? 0;
       return [
         "Add", "183454", title, price.toFixed(2), "1",
-        "FixedPrice", "GTC", conditionId(row.quality),
+        "FixedPrice", "GTC", 4000,
         description, row.tcgImageUrl ?? "", location,
         "3",  // DispatchTimeMax: 3 business days handling
         "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
-        "Pokémon",
+        "Pokémon", cardCondition(row.quality),
       ].map(escape).join(",");
     });
 
