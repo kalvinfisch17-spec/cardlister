@@ -914,15 +914,16 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
     }
 
     // All raw/ungraded cards use ConditionID 4000 (Ungraded) on eBay.
-    // The visual condition is expressed via CD:Card Condition.
+    // CD:40001 is the shorthand for Card Condition descriptor; values are eBay's numeric IDs.
+    // CCG (183454) valid values: 400010=NM, 400015=LP, 400016=MP, 400017=HP
     const cardCondition = (quality: string | null): string => {
       const q = (quality ?? "").toLowerCase();
-      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return "Near mint or better";
-      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return "Lightly played (Excellent)";
-      if (q.includes("moderately played") || q.includes("mp")) return "Moderately played (Very good)";
-      if (q.includes("heavily played") || q.includes("hp")) return "Heavily played (Poor)";
-      if (q.includes("damaged") || q.includes("poor")) return "Heavily played (Poor)";
-      return "Near mint or better";
+      if (q.includes("near mint") || q.includes("nm") || q.includes("mint")) return "400010";
+      if (q.includes("lightly played") || q.includes("lp") || q.includes("excellent")) return "400015";
+      if (q.includes("moderately played") || q.includes("mp")) return "400016";
+      if (q.includes("heavily played") || q.includes("hp")) return "400017";
+      if (q.includes("damaged") || q.includes("poor")) return "400017";
+      return "400010";
     };
 
     const escape = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
@@ -934,7 +935,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       "*Format", "*Duration", "ConditionID", "Description", "PicURL", "Location",
       "DispatchTimeMax",
       "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
-      "C:Game", "CD:Card Condition",
+      "C:Game", "CD:40001",
     ];
 
     // Backfill image URLs for any cards missing them
