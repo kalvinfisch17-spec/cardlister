@@ -26,3 +26,5 @@ channel = "stable-25_05"
 
 [userenv.shared]
 EBAY_LOCATION = "Birnamwood WI 54414"
+EBAY_REDIRECT_URI = "https://68b287ba-537f-4561-acff-eef62674417a-00-12cgv9va6g7ou.riker.replit.dev/api/ebay/callback"
+EBAY_SANDBOX = "false"
