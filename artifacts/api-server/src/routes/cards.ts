@@ -618,8 +618,6 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "ShippingService-1:Cost",
       "ReturnsAcceptedOption",
       "C:Game",
-      "C:Grade",
-      "C:Professional Grader",
     ];
 
     const escape = (val: string | number) =>
@@ -655,8 +653,6 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       SHIPPING_COST.toFixed(2),        // Shipping cost to buyer
       "ReturnsNotAccepted",            // Returns
       "Pokémon",                       // C:Game
-      "Ungraded",                      // C:Grade
-      "",                              // C:Professional Grader (blank = not graded)
     ].map(escape).join(","));
 
     const csv = [columns.map(escape).join(","), ...rows].join("\r\n");

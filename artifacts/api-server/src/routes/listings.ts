@@ -932,7 +932,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       "*Format", "*Duration", "ConditionID", "Description", "PicURL", "Location",
       "DispatchTimeMax",
       "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
-      "C:Game", "C:Grade", "C:Professional Grader",
+      "C:Game",
     ];
 
     // Backfill image URLs for any cards missing them
@@ -965,7 +965,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
         description, row.tcgImageUrl ?? "", location,
         "3",  // DispatchTimeMax: 3 business days handling
         "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
-        "Pokémon", "Ungraded", "",
+        "Pokémon",
       ].map(escape).join(",");
     });
 
