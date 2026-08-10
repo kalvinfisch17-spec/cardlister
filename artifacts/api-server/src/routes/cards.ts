@@ -612,10 +612,14 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "Description",
       "PicURL",
       "Location",
+      "DispatchTimeMax",
       "ShippingType",
       "ShippingService-1:Option",
       "ShippingService-1:Cost",
       "ReturnsAcceptedOption",
+      "C:Game",
+      "C:Grade",
+      "C:Professional Grader",
     ];
 
     const escape = (val: string | number) =>
@@ -645,10 +649,14 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       makeDescription(card),           // Description
       card.tcgImageUrl ?? "",          // PicURL (pokemontcg.io high-res image)
       location,                        // Location (required by eBay)
+      "3",                             // DispatchTimeMax: 3 business days
       "Flat",                          // ShippingType
       "USPSFirstClass",                // ShippingService
       SHIPPING_COST.toFixed(2),        // Shipping cost to buyer
       "ReturnsNotAccepted",            // Returns
+      "Pokémon",                       // C:Game
+      "Ungraded",                      // C:Grade
+      "None",                          // C:Professional Grader
     ].map(escape).join(","));
 
     const csv = [columns.map(escape).join(","), ...rows].join("\r\n");
