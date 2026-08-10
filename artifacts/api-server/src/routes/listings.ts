@@ -965,7 +965,7 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
         description, row.tcgImageUrl ?? "", location,
         "3",  // DispatchTimeMax: 3 business days handling
         "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
-        "Pokémon", "Ungraded", "None",
+        "Pokémon", "Ungraded", "",
       ].map(escape).join(",");
     });
 

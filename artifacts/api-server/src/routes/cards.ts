@@ -656,7 +656,7 @@ router.get("/cards/export/ebay-csv", async (req, res) => {
       "ReturnsNotAccepted",            // Returns
       "Pokémon",                       // C:Game
       "Ungraded",                      // C:Grade
-      "None",                          // C:Professional Grader
+      "",                              // C:Professional Grader (blank = not graded)
     ].map(escape).join(","));
 
     const csv = [columns.map(escape).join(","), ...rows].join("\r\n");
