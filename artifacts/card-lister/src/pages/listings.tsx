@@ -71,6 +71,7 @@ export default function ListingsPage() {
         toast({ title: "Export failed", description: err.error, variant: "destructive" });
         return;
       }
+      const skipped = Number(res.headers.get("X-Skipped-No-Image") ?? 0);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -78,7 +79,12 @@ export default function ListingsPage() {
       a.download = `fischtcg-ebay-export-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast({ title: "CSV exported", description: `${selectedIds.size} listing${selectedIds.size === 1 ? "" : "s"} exported. Upload in eBay Seller Hub → File Exchange.` });
+      const exported = selectedIds.size - skipped;
+      if (skipped > 0) {
+        toast({ title: `${exported} listing${exported === 1 ? "" : "s"} exported`, description: `${skipped} skipped — no card image found. Get pricing on those cards first to backfill images.`, variant: "default" });
+      } else {
+        toast({ title: "CSV exported", description: `${exported} listing${exported === 1 ? "" : "s"} exported. Upload in eBay Seller Hub → File Exchange.` });
+      }
       setSelectedIds(new Set());
     } catch {
       toast({ title: "Export failed", description: "Could not connect to the server.", variant: "destructive" });

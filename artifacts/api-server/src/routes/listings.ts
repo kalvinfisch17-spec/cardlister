@@ -930,7 +930,9 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
     const columns = [
       ACTION_HEADER, "*Category", "*Title", "*StartPrice", "*Quantity",
       "*Format", "*Duration", "ConditionID", "Description", "PicURL", "Location",
+      "DispatchTimeMax",
       "ShippingType", "ShippingService-1:Option", "ShippingService-1:Cost", "ReturnsAcceptedOption",
+      "C:Game", "C:Grade", "C:Professional Grader",
     ];
 
     // Backfill image URLs for any cards missing them
@@ -942,8 +944,17 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       }
     }));
 
+    // Cards with no image URL will be rejected by eBay — skip them and report
+    const rowsWithImage = rows.filter(r => r.tcgImageUrl);
+    const skippedNoImage = rows.length - rowsWithImage.length;
+
+    if (rowsWithImage.length === 0) {
+      res.status(400).json({ error: "None of the selected listings have a card image. Get pricing first to backfill images, then export." });
+      return;
+    }
+
     const SHIPPING_COST = 0.78;
-    const csvRows = rows.map((row) => {
+    const csvRows = rowsWithImage.map((row) => {
       const card = { cardName: row.cardName, setName: row.setName, cardNumber: row.cardNumber, quality: row.quality, holoType: row.holoType, language: row.language, rarity: row.rarity, year: row.year };
       const title = row.title ?? generateTitle(card as Parameters<typeof generateTitle>[0]);
       const description = row.description ?? generateDescription(card as Parameters<typeof generateDescription>[0]);
@@ -951,7 +962,10 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
       return [
         "Add", "183454", title, price.toFixed(2), "1",
         "FixedPrice", "GTC", conditionId(row.quality),
-        description, row.tcgImageUrl ?? "", location, "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
+        description, row.tcgImageUrl ?? "", location,
+        "3",  // DispatchTimeMax: 3 business days handling
+        "Flat", "USPSFirstClass", SHIPPING_COST.toFixed(2), "ReturnsNotAccepted",
+        "Pokémon", "Ungraded", "None",
       ].map(escape).join(",");
     });
 
@@ -959,6 +973,9 @@ router.post("/listings/export/ebay-csv-selected", async (req, res) => {
     const filename = `fischtcg-ebay-export-${new Date().toISOString().slice(0, 10)}.csv`;
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    if (skippedNoImage > 0) {
+      res.setHeader("X-Skipped-No-Image", String(skippedNoImage));
+    }
     res.send(csv);
   } catch (err) {
     req.log.error({ err }, "Failed to export selected listings CSV");
